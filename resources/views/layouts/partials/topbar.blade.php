@@ -1,0 +1,84 @@
+<div class="rd-topbar">
+    <div class="rd-topbar-inner container-fluid">
+        <div class="d-flex align-items-center gap-lg-2 gap-1">
+
+            {{-- Only shown while the sidebar is off-canvas (phones). --}}
+            <div class="rd-topbar-logo">
+                <a href="{{ route('overview') }}">
+                    <img src="{{ asset('assets/images/cortendesk-sm.svg') }}" alt="ACE Desk" height="28">
+                </a>
+            </div>
+
+            <button type="button" class="rd-menu-toggle" data-rd-toggle="sidebar" aria-label="{{ __('nav.toggle_menu') }}">
+                <i class="ri-menu-2-fill"></i>
+            </button>
+        </div>
+
+        @php
+            $rdUser = auth()->user();
+            $rdRole = $rdUser?->is_admin ? __('common.administrator') : ($rdUser?->role?->name ?? __('common.user'));
+        @endphp
+
+        <ul class="rd-topbar-menu d-flex align-items-center">
+
+            {{-- Reachable at every width. It used to drop below sm, which left the
+                 light palette unreachable on a phone — the one screen size where
+                 someone is most likely to be outdoors and want it. --}}
+            <li>
+                <div class="nav-link rd-topbar-btn rd-theme-toggle" data-rd-toggle="theme" data-bs-toggle="tooltip" data-bs-placement="bottom" title="{{ __('nav.theme_mode') }}">
+                    <i class="ri-moon-line"></i>
+                </div>
+            </li>
+
+            <li class="dropdown">
+                @include('layouts.partials.language-menu')
+            </li>
+
+            <li class="d-none d-md-inline-block">
+                <a class="nav-link rd-topbar-btn" href="#" data-rd-toggle="fullscreen" data-bs-toggle="tooltip" data-bs-placement="bottom" title="{{ __('nav.full_screen') }}">
+                    <i class="ri-fullscreen-line"></i>
+                </a>
+            </li>
+
+            <li class="dropdown">
+                <a class="nav-link dropdown-toggle rd-no-caret rd-user-chip" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
+                    <span>
+                        <span class="rd-avatar rd-tone-accent">
+                            {{ strtoupper(substr($rdUser->username ?? 'A', 0, 1)) }}
+                        </span>
+                    </span>
+                    <span class="d-lg-flex flex-column d-none rd-topbar-identity">
+                        <h5 class="rd-topbar-name">{{ $rdUser?->displayName() }}</h5>
+                        <h6 class="rd-topbar-role">{{ $rdRole }}</h6>
+                    </span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end rd-dropdown-slide rd-profile-menu">
+                    <div class="dropdown-header">
+                        <h6 class="rd-menu-name text-truncate">{{ $rdUser?->displayName() }}</h6>
+                        <span class="rd-menu-role">{{ $rdRole }}</span>
+                    </div>
+
+                    <a href="{{ route('account') }}" class="dropdown-item">
+                        <i class="ri-account-circle-line"></i>
+                        <span>{{ __('common.my_account') }}</span>
+                    </a>
+
+                    <a href="{{ route('account.two-factor') }}" class="dropdown-item">
+                        <i class="ri-shield-keyhole-line"></i>
+                        <span>{{ __('common.two_factor_authentication') }}</span>
+                    </a>
+
+                    <div class="dropdown-divider"></div>
+
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="dropdown-item">
+                            <i class="ri-logout-box-line"></i>
+                            <span>{{ __('nav.logout') }}</span>
+                        </button>
+                    </form>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>

@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'about_copyright' => '©:year ACE Desk por :author',
+    'about_cortendesk' => 'Sobre o ACE Desk',
+    'about_license' => 'Licença AGPL-3.0',
+    'about_new_version' => 'Uma nova versão está disponível: v:version',
+    'about_release_notes_for' => 'Notas da versão v:version',
+    'about_released' => 'Lançada em :date',
+    'about_version' => 'Versão :version',
+    'auth_footer' => '©:year ACE Desk. Um console de código aberto compatível com o RustDesk Pro',
+    'close_menu' => 'Fechar menu',
+    'cortendesk_compares_running_version_agai' => 'O ACE Desk compara a versão em execução com a versão mais recente publicada.',
+    'diagnostics' => 'Diagnóstico',
+    'file_transfers' => 'Transferências',
+    'full_screen' => 'Tela cheia',
+    'logins' => 'Logins',
+    'logout' => 'Sair',
+    'monitor' => 'Monitorar',
+    'release_check_unavailable' => 'Verificação de versão indisponível',
+    'sponsor_cortendesk' => 'Apoiar o ACE Desk',
+    'sponsor_cortendesk_title' => 'Apoie o ACE Desk (abre em uma nova aba)',
+    'theme_mode' => 'Modo do tema',
+    'toggle_menu' => 'Alternar menu',
+    'up_to_date' => 'Atualizado',
+    'update_to_v_version' => 'Atualizar para v:version',
+    'version_version_is_available_opens' => 'A versão :version está disponível. Abre as notas de versão.',
+];

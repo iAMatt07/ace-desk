@@ -1,0 +1,226 @@
+<div class="rd-sidebar">
+
+    <a href="{{ route('overview') }}" class="rd-sidebar-logo">
+        <span class="rd-logo-lg">
+            <img src="{{ asset('assets/images/cortendesk-logo-light.svg') }}" alt="ACE Desk" height="24"/>
+        </span>
+        <span class="rd-logo-sm">
+            <img src="{{ asset('assets/images/cortendesk-sm.svg') }}" alt="ACE Desk" height="52" class="mx-auto d-block"/>
+        </span>
+    </a>
+
+    <div class="rd-sidebar-close" data-rd-dismiss="sidebar" role="button" aria-label="{{ __('nav.close_menu') }}">
+        <i class="ri-close-fill align-middle"></i>
+    </div>
+
+    <div class="rd-sidebar-scroll">
+
+        @php
+            // Delegated roles (PLAN D4). consoleAllows() returns true for
+            // is_admin and, for a user with no role, for exactly the areas a
+            // non-admin could always reach — so this sidebar renders
+            // identically on an install with no roles defined.
+            $u = auth()->user();
+            $canDevices = $u?->consoleAllows('device');
+            $canAddressBooks = $u?->consoleAllows('address_book');
+            $canGroups = $u?->consoleAllows('group');
+            $canUsers = $u?->consoleAllows('user');
+            $canStrategies = $u?->consoleAllows('strategy');
+            $canAudit = $u?->consoleAllows('audit');
+            $canAuditManage = $u?->consoleAllows('audit', 'rw');
+            $canSettings = $u?->consoleAllows('setting');
+            $canRoles = $u?->is_admin;
+        @endphp
+
+        <ul class="rd-nav">
+
+            <li class="rd-nav-item {{ request()->routeIs('overview') ? 'rd-current' : '' }}">
+                <a href="{{ route('overview') }}" class="rd-nav-link {{ request()->routeIs('overview') ? 'active' : '' }}">
+                    <i class="ri-home-4-line"></i>
+                    <span> {{ __('common.overview') }} </span>
+                </a>
+            </li>
+
+            @if ($canDevices || $canAddressBooks || $canGroups || $canUsers || $canStrategies || $canRoles)
+                <li class="rd-nav-title">{{ __('common.manage') }}</li>
+            @endif
+
+            @if ($canDevices)
+                <li class="rd-nav-item {{ request()->routeIs('devices') ? 'rd-current' : '' }}">
+                    <a href="{{ route('devices') }}" class="rd-nav-link {{ request()->routeIs('devices') ? 'active' : '' }}">
+                        <i class="ri-computer-line"></i>
+                        <span> {{ __('common.devices') }} </span>
+                    </a>
+                </li>
+            @endif
+
+            @if ($canAddressBooks)
+                <li class="rd-nav-item {{ request()->routeIs('address-books') ? 'rd-current' : '' }}">
+                    <a href="{{ route('address-books') }}" class="rd-nav-link {{ request()->routeIs('address-books') ? 'active' : '' }}">
+                        <i class="ri-contacts-book-2-line"></i>
+                        <span> {{ __('common.address_books') }} </span>
+                    </a>
+                </li>
+            @endif
+
+            @if (config('cortendesk.native_webclient'))
+                <li class="rd-nav-item">
+                    <a href="{{ route('webclient') }}" target="cortendesk-webclient" rel="noopener" class="rd-nav-link">
+                        <i class="ri-global-line"></i>
+                        <span> {{ __('common.web_client') }} </span>
+                    </a>
+                </li>
+            @elseif (config('cortendesk.webclient_url'))
+                <li class="rd-nav-item">
+                    <a href="{{ config('cortendesk.webclient_url') }}" target="_blank" rel="noopener" class="rd-nav-link">
+                        <i class="ri-global-line"></i>
+                        <span> {{ __('common.web_client') }} </span>
+                    </a>
+                </li>
+            @endif
+
+            @if ($canGroups)
+                <li class="rd-nav-item {{ request()->routeIs('groups') ? 'rd-current' : '' }}">
+                    <a href="{{ route('groups') }}" class="rd-nav-link {{ request()->routeIs('groups') ? 'active' : '' }}">
+                        <i class="ri-group-line"></i>
+                        <span> {{ __('common.groups') }} </span>
+                    </a>
+                </li>
+            @endif
+
+            @if ($canUsers)
+                <li class="rd-nav-item {{ request()->routeIs('users') ? 'rd-current' : '' }}">
+                    <a href="{{ route('users') }}" class="rd-nav-link {{ request()->routeIs('users') ? 'active' : '' }}">
+                        <i class="ri-user-settings-line"></i>
+                        <span> {{ __('common.users') }} </span>
+                    </a>
+                </li>
+            @endif
+
+            {{-- Roles are super-admin only: a delegated admin who could edit
+                 roles could grant themselves anything (PLAN D4). --}}
+            @if ($canRoles)
+                <li class="rd-nav-item {{ request()->routeIs('roles') ? 'rd-current' : '' }}">
+                    <a href="{{ route('roles') }}" class="rd-nav-link {{ request()->routeIs('roles') ? 'active' : '' }}">
+                        <i class="ri-shield-user-line"></i>
+                        <span> {{ __('common.roles') }} </span>
+                    </a>
+                </li>
+            @endif
+
+            @if ($canStrategies)
+                <li class="rd-nav-item {{ request()->routeIs('strategies') ? 'rd-current' : '' }}">
+                    <a href="{{ route('strategies') }}" class="rd-nav-link {{ request()->routeIs('strategies') ? 'active' : '' }}">
+                        <i class="ri-shield-keyhole-line"></i>
+                        <span> {{ __('common.strategies') }} </span>
+                    </a>
+                </li>
+            @endif
+
+            @if ($canAudit)
+                <li class="rd-nav-title">{{ __('nav.monitor') }}</li>
+
+                <li class="rd-nav-item {{ request()->routeIs('logs.*') ? 'rd-current' : '' }}">
+                    <a data-bs-toggle="collapse" href="#sidebarLogs" aria-expanded="{{ request()->routeIs('logs.*') ? 'true' : 'false' }}" aria-controls="sidebarLogs" class="rd-nav-link">
+                        <i class="ri-file-list-3-line"></i>
+                        <span> {{ __('common.logs') }} </span>
+                        <span class="rd-nav-arrow"></span>
+                    </a>
+                    <div class="collapse {{ request()->routeIs('logs.*') ? 'show' : '' }}" id="sidebarLogs">
+                        <ul class="rd-nav-sub">
+                            <li class="{{ request()->routeIs('logs.connections') ? 'rd-current' : '' }}"><a href="{{ route('logs.connections') }}">{{ __('common.connections') }}</a></li>
+                            <li class="{{ request()->routeIs('logs.file-transfers') ? 'rd-current' : '' }}"><a href="{{ route('logs.file-transfers') }}">{{ __('nav.file_transfers') }}</a></li>
+                            <li class="{{ request()->routeIs('logs.alarms') ? 'rd-current' : '' }}"><a href="{{ route('logs.alarms') }}">{{ __('common.alarms') }}</a></li>
+                            @if ($canAuditManage)
+                                <li class="{{ request()->routeIs('logs.logins') ? 'rd-current' : '' }}"><a href="{{ route('logs.logins') }}">{{ __('nav.logins') }}</a></li>
+                                <li class="{{ request()->routeIs('logs.console') ? 'rd-current' : '' }}"><a href="{{ route('logs.console') }}">{{ __('common.console') }}</a></li>
+                            @endif
+                        </ul>
+                    </div>
+                </li>
+            @endif
+
+            @if ($canSettings)
+                <li class="rd-nav-title">{{ __('common.system') }}</li>
+
+                <li class="rd-nav-item {{ request()->routeIs('settings') ? 'rd-current' : '' }}">
+                    <a href="{{ route('settings') }}" class="rd-nav-link {{ request()->routeIs('settings') ? 'active' : '' }}">
+                        <i class="ri-settings-3-line"></i>
+                        <span> {{ __('common.settings') }} </span>
+                    </a>
+                </li>
+
+                <li class="rd-nav-item {{ request()->routeIs('diagnostics*') ? 'rd-current' : '' }}">
+                    <a href="{{ route('diagnostics') }}" class="rd-nav-link {{ request()->routeIs('diagnostics*') ? 'active' : '' }}">
+                        <i class="ri-pulse-line"></i>
+                        <span> {{ __('nav.diagnostics') }} </span>
+                    </a>
+                </li>
+
+                <li class="rd-nav-item {{ request()->routeIs('client-downloads') ? 'rd-current' : '' }}">
+                    <a href="{{ route('client-downloads') }}" class="rd-nav-link {{ request()->routeIs('client-downloads') ? 'active' : '' }}">
+                        <i class="ri-download-cloud-line"></i>
+                        <span> {{ __('common.client_downloads') }} </span>
+                    </a>
+                </li>
+
+                @php
+                    $rdgenUrl = \App\Models\Setting::get('rdgen_url', config('cortendesk.rdgen_url'));
+                @endphp
+                @if ($rdgenUrl)
+                    <li class="rd-nav-item">
+                        <a href="{{ $rdgenUrl }}" target="_blank" rel="noopener" class="rd-nav-link">
+                            <i class="ri-install-line"></i>
+                            <span> {{ __('common.build_installers') }} </span>
+                        </a>
+                    </li>
+                @endif
+            @endif
+        </ul>
+
+    </div>
+
+    {{-- Pinned under the scrolling menu: the sponsor link for everyone, then
+         the release status for whoever can act on it. --}}
+    <div class="rd-sidebar-foot">
+        <a href="https://cortendesk.com/sponsor" target="_blank" rel="noopener" class="rd-nav-link rd-sidebar-sponsor"
+           title="{{ __('nav.sponsor_cortendesk_title') }}">
+            <i class="ri-heart-3-line"></i>
+            <span>{{ __('nav.sponsor_cortendesk') }}</span>
+            <i class="ri-arrow-right-up-line rd-sidebar-sponsor-ext"></i>
+        </a>
+
+        @if ($canSettings)
+            @php
+                $rdUpgrade = \App\Support\UpdateChecker::upgradeAvailable();
+                // The console has no health probe of its own, so the status line
+                // reports the one signal that is real, the release check, and
+                // says so rather than claiming anything about the servers.
+                $rdChecked = \App\Support\UpdateChecker::latestVersion() !== null;
+            @endphp
+            <div class="rd-sidebar-version">
+                <button type="button" class="rd-sidebar-version-num" data-bs-toggle="modal" data-bs-target="#rd-about"
+                        title="{{ __('nav.about_cortendesk') }}">v{{ config('cortendesk.api_version') }}</button>
+                {{-- With the update check off there is nothing to report. With an
+                     upgrade out, the badge says it. --}}
+                @if (\App\Support\UpdateChecker::enabled() && ! $rdUpgrade)
+                    <button type="button" class="rd-sidebar-status {{ $rdChecked ? 'rd-sidebar-status-ok' : 'rd-sidebar-status-unknown' }}"
+                            data-bs-toggle="modal" data-bs-target="#rd-about"
+                            title="{{ __('nav.cortendesk_compares_running_version_agai') }}">
+                        @if ($rdChecked)
+                            <i class="ri-check-line"></i>{{ __('nav.up_to_date') }}
+                        @else
+                            <i class="rd-dot rd-dot-lg"></i>{{ __('nav.release_check_unavailable') }}
+                        @endif
+                    </button>
+                @endif
+                {{-- The one place an upgrade shows, with the link to act on it. --}}
+                @if ($rdUpgrade)
+                    <a href="{{ \App\Support\UpdateChecker::releaseNotesUrl($rdUpgrade) }}" target="_blank" rel="noopener"
+                       class="rd-shell-badge"
+                       title="{{ __('nav.version_version_is_available_opens', ['version' => $rdUpgrade]) }}"><i class="ri-download-cloud-2-line"></i>{{ __('nav.update_to_v_version', ['version' => $rdUpgrade]) }}</a>
+                @endif
+            </div>
+        @endif
+    </div>
+</div>

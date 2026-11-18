@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'about_copyright' => '©:year ACE Desk by :author',
+    'about_cortendesk' => 'About ACE Desk',
+    'about_license' => 'AGPL-3.0 license',
+    'about_new_version' => 'A new version is available: v:version',
+    'about_release_notes_for' => 'Release notes for v:version',
+    'about_released' => 'Released :date',
+    'about_version' => 'Version :version',
+    'auth_footer' => '©:year ACE Desk. An OSS RustDesk Pro Compatible Console',
+    'close_menu' => 'Close menu',
+    'cortendesk_compares_running_version_agai' => 'ACE Desk compares the running version against the latest published release.',
+    'diagnostics' => 'Diagnostics',
+    'file_transfers' => 'File Transfers',
+    'full_screen' => 'Full Screen',
+    'logins' => 'Logins',
+    'logout' => 'Logout',
+    'monitor' => 'Monitor',
+    'release_check_unavailable' => 'Release check unavailable',
+    'sponsor_cortendesk' => 'Sponsor ACE Desk',
+    'sponsor_cortendesk_title' => 'Support ACE Desk (opens in a new tab)',
+    'theme_mode' => 'Theme Mode',
+    'toggle_menu' => 'Toggle menu',
+    'up_to_date' => 'Up-to-Date',
+    'update_to_v_version' => 'Update to v:version',
+    'version_version_is_available_opens' => 'Version :version is available. Opens the release notes.',
+];

@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'about_copyright' => '©:year CortenDesk, készítette: :author',
+    'about_cortendesk' => 'A CortenDesk névjegye',
+    'about_license' => 'AGPL-3.0 licenc',
+    'about_new_version' => 'Új verzió érhető el: v:version',
+    'about_release_notes_for' => 'A v:version kiadási jegyzetei',
+    'about_released' => 'Megjelent: :date',
+    'about_version' => 'Verzió: :version',
+    'auth_footer' => '©:year CortenDesk. Nyílt forráskódú, RustDesk Pro-kompatibilis konzol',
+    'close_menu' => 'Menü bezárása',
+    'cortendesk_compares_running_version_agai' => 'A CortenDesk összeveti a futó verziót a legutóbbi közzétett kiadással.',
+    'diagnostics' => 'Diagnosztika',
+    'file_transfers' => 'Fájlátvitelek',
+    'full_screen' => 'Teljes képernyő',
+    'logins' => 'Bejelentkezések',
+    'logout' => 'Kijelentkezés',
+    'monitor' => 'Felügyelet',
+    'release_check_unavailable' => 'A kiadás-ellenőrzés nem érhető el',
+    'sponsor_cortendesk' => 'CortenDesk támogatása',
+    'sponsor_cortendesk_title' => 'A CortenDesk támogatása (új lapon nyílik meg)',
+    'theme_mode' => 'Megjelenítési mód',
+    'toggle_menu' => 'Menü ki-/bekapcsolása',
+    'up_to_date' => 'Naprakész',
+    'update_to_v_version' => 'Frissítés a v:version verzióra',
+    'version_version_is_available_opens' => 'Elérhető a(z) :version verzió. Megnyitja a kiadási megjegyzéseket.',
+];

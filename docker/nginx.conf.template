@@ -1,0 +1,139 @@
+# CortenDesk container nginx — rendered by entrypoint.sh with envsubst
+# (only the ${...} variables listed there are substituted; $nginx_vars are
+# untouched).
+worker_processes auto;
+pid /run/nginx/nginx.pid;
+error_log /dev/stderr warn;
+# Sized from CORTENDESK_NGINX_WORKER_CONNECTIONS: two descriptors per proxied
+# connection, capped at the container's hard limit.
+worker_rlimit_nofile ${NGINX_WORKER_RLIMIT_NOFILE};
+
+events { worker_connections ${NGINX_WORKER_CONNECTIONS}; }
+
+http {
+    include /etc/nginx/mime.types;
+    # Alpine's mime.types has no entry for the web client's manifest.
+    types { application/manifest+json webmanifest; }
+    default_type application/octet-stream;
+    access_log off;
+    sendfile on;
+    # Everything except the installer upload endpoint (below) keeps a small
+    # body limit, so no other route buffers a large anonymous POST.
+    client_max_body_size 32m;
+
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+
+    # When a TLS-terminating proxy forwards X-Forwarded-Proto: https, tell PHP
+    # the request is secure (belt-and-suspenders alongside Laravel's trusted
+    # proxies, so scheme detection is correct however the container is fronted).
+    map $http_x_forwarded_proto $fcgi_https {
+        default '';
+        https   'on';
+    }
+
+    server {
+        listen ${CORTENDESK_HTTP_PORT};
+        server_name _;
+        root /app/public;
+        index index.php;
+
+        # WebSocket bridge for the native web client -> hbbs/hbbr.
+        # RUSTDESK_WS_HOST is derived from CORTENDESK_ID_SERVER (or set it
+        # explicitly). A TLS reverse proxy in front of this container turns
+        # these into the wss:// endpoints the browser requires.
+        # The upstream is a variable so nginx resolves it per-request instead
+        # of refusing to start when the host isn't resolvable yet.
+        resolver ${NGINX_RESOLVER} valid=30s;
+        set $rd_ws_host "${RUSTDESK_WS_HOST}";
+
+        location = /ws/id {
+            proxy_pass http://$rd_ws_host:21118/;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+            # hbbs/hbbr take the client address from these headers on ws, so
+            # never pass a client-supplied one through (upstream
+            # rustdesk-server #634). A forwarded address counts only from a
+            # private or loopback proxy; hbbs/hbbr trust this nginx only
+            # (--trusted-proxies in rustdesk-server.conf).
+            set_real_ip_from 10.0.0.0/8;
+            set_real_ip_from 172.16.0.0/12;
+            set_real_ip_from 192.168.0.0/16;
+            set_real_ip_from 127.0.0.0/8;
+            set_real_ip_from fc00::/7;
+            set_real_ip_from ::1;
+            real_ip_header X-Forwarded-For;
+            real_ip_recursive on;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $remote_addr;
+            proxy_read_timeout 3600s;
+            proxy_send_timeout 3600s;
+        }
+        location = /ws/relay {
+            proxy_pass http://$rd_ws_host:21119/;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+            # hbbs/hbbr take the client address from these headers on ws, so
+            # never pass a client-supplied one through (upstream
+            # rustdesk-server #634). A forwarded address counts only from a
+            # private or loopback proxy; hbbs/hbbr trust this nginx only
+            # (--trusted-proxies in rustdesk-server.conf).
+            set_real_ip_from 10.0.0.0/8;
+            set_real_ip_from 172.16.0.0/12;
+            set_real_ip_from 192.168.0.0/16;
+            set_real_ip_from 127.0.0.0/8;
+            set_real_ip_from fc00::/7;
+            set_real_ip_from ::1;
+            real_ip_header X-Forwarded-For;
+            real_ip_recursive on;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $remote_addr;
+            proxy_read_timeout 3600s;
+            proxy_send_timeout 3600s;
+        }
+
+        # Livewire's temporary-upload endpoint, the only route that takes an
+        # installer. Sized from CORTENDESK_DOWNLOADS_MAX_MB with headroom for
+        # the multipart framing. Requests still need Livewire's signed URL.
+        location ~ ^/livewire-[0-9a-f]+/upload-file$ {
+            client_max_body_size ${CORTENDESK_UPLOAD_BODY_MB}m;
+            fastcgi_pass 127.0.0.1:9000;
+            include fastcgi_params;
+            fastcgi_param SCRIPT_FILENAME $realpath_root/index.php;
+            fastcgi_param SCRIPT_NAME /index.php;
+            fastcgi_param HTTPS $fcgi_https if_not_empty;
+            fastcgi_read_timeout 300s;
+        }
+
+        # Installer files, sent by nginx when ClientDownloadController answers
+        # with X-Accel-Redirect. internal: unreachable from outside.
+        location /_cortendesk_downloads/ {
+            internal;
+            alias ${CORTENDESK_DOWNLOADS_PATH}/;
+            types { }
+            default_type application/octet-stream;
+            add_header X-Content-Type-Options nosniff always;
+        }
+
+        location / {
+            try_files $uri $uri/ /index.php?$query_string;
+        }
+
+        location ~ \.php$ {
+            fastcgi_pass 127.0.0.1:9000;
+            fastcgi_index index.php;
+            fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+            fastcgi_param HTTPS $fcgi_https if_not_empty;
+            # A large installer upload is copied and hashed after it arrives;
+            # give PHP longer than the 60s default to answer.
+            fastcgi_read_timeout 300s;
+            include fastcgi_params;
+        }
+
+        location ~ /\.(?!well-known) { deny all; }
+    }
+}

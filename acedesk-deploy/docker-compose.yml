@@ -1,0 +1,42 @@
+# ACE Desk — servidor completo (console + cliente web + ID + retransmissão)
+# Roda numa VM gratuita da Oracle Cloud. O Caddy cuida do HTTPS sozinho.
+#
+# Antes de subir: troque DOMINIO no arquivo .env (ex: desk.aaccessbr.com)
+services:
+  acedesk:
+    build: ..
+    container_name: acedesk
+    environment:
+      APP_URL: https://${DOMINIO}
+      APP_NAME: "ACE Desk"
+      APP_LOCALE: pt_BR
+      CORTENDESK_ADMIN_USER: ${ADMIN_USUARIO}
+      CORTENDESK_ADMIN_PASSWORD: ${ADMIN_SENHA}
+    ports:
+      # ID e retransmissão (os PCs com ACE Desk usam estas portas)
+      - "21115:21115"
+      - "21116:21116"
+      - "21116:21116/udp"
+      - "21117:21117"
+    volumes:
+      - acedesk-data:/data
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    container_name: acedesk-https
+    environment:
+      DOMINIO: ${DOMINIO}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      - acedesk
+    restart: unless-stopped
+
+volumes:
+  acedesk-data:
+  caddy-data:

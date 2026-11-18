@@ -1,0 +1,52 @@
+{
+  "title": "ACE Desk — acesso remoto próprio da ACE (substituto do AnyDesk)",
+  "type": ["app"],
+  "goal": "Acessar e controlar PCs Windows pelo iPhone ou por outro PC, sem travar e sem demora pra conectar, com uma barra de atalhos de teclado fácil no celular.",
+  "success": "Em 3 semanas o usuário desinstala o AnyDesk, e ele e as pessoas próximas acessam os PCs pelo ACE Desk sem precisar pedir ajuda.",
+  "users": "O usuário (iPhone + PC Windows) e pessoas próximas (namorada, família, alguns clientes da ACE), leigas em tecnologia.",
+  "must_have": [
+    {"item": "Servidor próprio grátis (ID + retransmissão) numa VPS gratuita", "accept": "Com o servidor no ar, dois PCs em redes diferentes se conectam pelo ID em menos de 10 segundos."},
+    {"item": "ACE Desk para Windows com a marca ACE e o servidor já embutido", "accept": "Instalar num PC limpo: aparece o ID do ACE Desk sem configurar nada à mão."},
+    {"item": "Acesso sem ninguém do outro lado, com senha fixa", "accept": "Com o PC sozinho e logado, conectar pelo iPhone usando a senha fixa: a tela abre sem ninguém aceitar."},
+    {"item": "Lista de computadores salvos com nome", "accept": "Salvar 'PC Estúdio' uma vez; depois, um toque no nome conecta."},
+    {"item": "Versão web do ACE Desk que funciona no iPhone e fica salva na tela inicial", "accept": "No Safari, 'Adicionar à Tela de Início': o app abre em tela cheia e controla o PC do estúdio."},
+    {"item": "Barra de atalhos no celular com os atalhos padrão", "accept": "Tocar em Ctrl+C no iPhone e depois em Ctrl+V: o texto é copiado e colado no PC remoto. A barra tem Ctrl+C, Ctrl+V, Ctrl+Z, Ctrl+A, Ctrl+S, Alt+Tab, Win+D, Esc, Enter, Del e Ctrl+Alt+Del."},
+    {"item": "Teclas-chave travadas para montar qualquer combinação", "accept": "Tocar em Ctrl e em Shift (ficam acesas) e depois em Esc: o Gerenciador de Tarefas abre no PC remoto."},
+    {"item": "Transferir arquivos do PC pro celular e do celular pro PC", "accept": "Pelo iPhone, baixar um arquivo de uma pasta do PC e abrir no app Arquivos do iPhone."},
+    {"item": "Visual comercial e intuitivo, com base na identidade da ACE e inspiração no estilo Apple", "accept": "Uma pessoa leiga da família instala no PC e passa o ID sem ajuda, na primeira tentativa."}
+  ],
+  "nice_to_have": [
+    "Barras de atalhos diferentes por programa (Premiere, FL Studio, Explorador)",
+    "Criar e salvar atalhos próprios na barra",
+    "Página de download simples para mandar o link para família e clientes"
+  ],
+  "out_of_scope": [
+    "Controlar o iPhone a partir do PC (a Apple não permite)",
+    "App nativo na App Store (exigiria a conta de desenvolvedor da Apple, US$ 99/ano)",
+    "Controlar celulares Android",
+    "Mac e Linux nesta primeira versão",
+    "Painel de administração e histórico de acessos"
+  ],
+  "constraints": [
+    "Custo mensal R$ 0 (VPS gratuita, domínio gratuito)",
+    "Licença AGPL: o código modificado precisa ficar público (repositório no GitHub)",
+    "A versão web exige HTTPS, então precisa de um domínio gratuito com certificado"
+  ],
+  "assumptions": [
+    {"text": "A versão web no iPhone tem fluidez aceitável. Isso vai ser testado num protótipo ANTES de construir tudo; se travar, a alternativa é a conta Apple (US$ 99/ano) ou o app oficial do RustDesk.", "from": "pesquisa: o RustDesk OSS aceita cliente web por WebSocket", "risk": "high"},
+    {"text": "A VPS gratuita (ex: Oracle Cloud Free) aceita o cadastro do usuário e fica estável. O cadastro pede cartão para verificação, mas não cobra.", "from": "padrão", "risk": "high"},
+    {"text": "A base do cliente web vai ser um projeto aberto da comunidade compatível com RustDesk, adaptado, em vez de um cliente web escrito do zero.", "from": "pesquisa", "risk": "med"},
+    {"text": "Os PCs controlados rodam Windows 10/11.", "from": "conversa", "risk": "low"},
+    {"text": "O logo e as cores vêm do site da ACE.", "from": "resposta 13", "risk": "low"}
+  ],
+  "reject_if": [
+    "Demorar para conectar (mais de ~10 segundos)",
+    "Imagem travando ou congelando durante o uso",
+    "Simplesmente não conectar"
+  ],
+  "open_risks": [
+    "Desempenho de vídeo no Safari do iPhone",
+    "Algumas redes (4G, Wi-Fi corporativo da Rádio) podem forçar a retransmissão e deixar mais lento",
+    "Compilar o cliente Windows (Rust + Flutter) pelo GitHub Actions pode exigir ajustes"
+  ]
+}

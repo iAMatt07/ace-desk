@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'about_copyright' => '©:year CortenDesk, autor :author',
+    'about_cortendesk' => 'O CortenDesk',
+    'about_license' => 'Licencia AGPL-3.0',
+    'about_new_version' => 'K dispozícii je nová verzia: v:version',
+    'about_release_notes_for' => 'Poznámky k vydaniu v:version',
+    'about_released' => 'Vydané :date',
+    'about_version' => 'Verzia :version',
+    'auth_footer' => '©:year CortenDesk. Konzola s otvoreným zdrojovým kódom kompatibilná s RustDesk Pro',
+    'close_menu' => 'Zavrieť ponuku',
+    'cortendesk_compares_running_version_agai' => 'CortenDesk porovnáva bežiacu verziu s poslednou publikovanou verziou.',
+    'diagnostics' => 'Diagnostika',
+    'file_transfers' => 'Prenosy súborov',
+    'full_screen' => 'Celá obrazovka',
+    'logins' => 'Prihlásenia',
+    'logout' => 'Odhlásiť sa',
+    'monitor' => 'Monitorovať',
+    'release_check_unavailable' => 'Kontrola vydania nie je dostupná',
+    'sponsor_cortendesk' => 'Podporiť CortenDesk',
+    'sponsor_cortendesk_title' => 'Podporiť CortenDesk (otvorí sa v novej karte)',
+    'theme_mode' => 'Farebný režim',
+    'toggle_menu' => 'Prepnúť ponuku',
+    'up_to_date' => 'Aktuálna',
+    'update_to_v_version' => 'Aktualizovať na v:version',
+    'version_version_is_available_opens' => 'Je dostupná verzia :version. Otvorí poznámky k vydaniu.',
+];

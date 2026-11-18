@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+@php($rdTheme = auth()->user()?->themePreference() ?? 'dark')
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-bs-theme="{{ $rdTheme === 'light' ? 'light' : 'dark' }}" data-rd-theme-pref="{{ $rdTheme }}" data-rd-sidebar="expanded">
+<head>
+    <meta charset="utf-8"/>
+    <title>{{ $__env->yieldContent('title', __('common.console')) }} | {{ config('app.name') }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ACE Desk — acesso remoto da ACE"/>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="shortcut icon" href="{{ \App\Support\Asset::url('assets/images/cortendesk-sm.svg') }}">
+
+    <!-- Theme + sidebar state before first paint (no flash) -->
+    <script src="{{ \App\Support\Asset::url('assets/js/theme-init.js') }}"></script>
+
+    <link href="{{ \App\Support\Asset::url('assets/vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet" type="text/css"/>
+    <link href="{{ \App\Support\Asset::url('assets/vendor/remixicon/remixicon.css') }}" rel="stylesheet" type="text/css"/>
+    <link href="{{ \App\Support\Asset::url('assets/fonts/figtree/figtree.css') }}" rel="stylesheet" type="text/css"/>
+    <link href="{{ \App\Support\Asset::url('assets/css/spacing.css') }}" rel="stylesheet" type="text/css"/>
+    <link href="{{ \App\Support\Asset::url('assets/css/shell.css') }}" rel="stylesheet" type="text/css"/>
+    <link href="{{ \App\Support\Asset::url('assets/css/cortendesk.css') }}" rel="stylesheet" type="text/css"/>
+</head>
+
+<body>
+    <div class="rd-app">
+
+        @include('layouts.partials.topbar')
+
+        @include('layouts.partials.sidebar')
+
+        <div class="rd-main">
+            <div class="rd-content">
+                <div class="container-fluid">
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="rd-page-head">
+                                <div class="rd-page-crumbs">
+                                    <ol class="breadcrumb m-0">
+                                        <li class="breadcrumb-item"><a href="{{ route('overview') }}">ACE Desk</a></li>
+                                        @hasSection('subtitle')
+                                            <li class="breadcrumb-item"><a href="javascript:void(0);">@yield('subtitle')</a></li>
+                                        @endif
+                                        <li class="breadcrumb-item active">@yield('title')</li>
+                                    </ol>
+                                </div>
+                                <h4 class="rd-page-title">@yield('title')</h4>
+                            </div>
+                        </div>
+                    </div>
+
+                    @yield('content')
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    @include('layouts.partials.about-modal')
+
+    <script src="{{ \App\Support\Asset::url('assets/vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ \App\Support\Asset::url('assets/js/shell.js') }}"></script>
+    <script src="{{ \App\Support\Asset::url('assets/js/cortendesk.js') }}"></script>
+
+    @stack('scripts')
+</body>
+</html>

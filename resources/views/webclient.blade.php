@@ -1,0 +1,61 @@
+@php
+    // Cache-bust built assets by mtime so a rebuild is always picked up (no hard-refresh needed).
+    $rdVer = @filemtime(public_path('rdclient/app.js')) ?: time();
+@endphp
+<!DOCTYPE html>
+@php($rdTheme = auth()->user()?->themePreference() ?? 'dark')
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-bs-theme="{{ $rdTheme === 'light' ? 'light' : 'dark' }}" data-rd-theme-pref="{{ $rdTheme }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <title>{{ $peerId !== '' ? $peerId.' — ' : '' }}ACE Desk</title>
+    {{-- Add to Home Screen: a full-screen app on iPhone (which has no fullscreen API) and Android.
+         No start_url in the manifest: the app opens the page it was added from (device id included). --}}
+    <link rel="manifest" href="/rdclient/manifest.webmanifest">
+    <meta name="theme-color" content="#000000">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ACE Desk">
+    <link rel="apple-touch-icon" href="/rdclient/logo.png">
+    <link rel="shortcut icon" href="{{ \App\Support\Asset::url('assets/images/cortendesk-sm.svg') }}">
+    <script src="{{ \App\Support\Asset::url('assets/js/theme-init.js') }}"></script>
+    <link rel="stylesheet" href="{{ \App\Support\Asset::url('assets/vendor/remixicon/remixicon.css') }}">
+    <link rel="stylesheet" href="/rdclient/app.css?v={{ $rdVer }}">
+    <style>
+        html, body { height: 100%; margin: 0; overflow: hidden; background: #000; overscroll-behavior: none; }
+        #rd-root { height: 100vh; height: 100dvh; }
+    </style>
+</head>
+<body>
+
+    <div id="rd-root">
+        <div id="rd-toolbar"></div>
+        <div id="rd-viewport">
+            <canvas id="rd-canvas"></canvas>
+            <div id="rd-stats"></div>
+            <div id="rd-overlay"></div>
+        </div>
+    </div>
+
+    <script>
+        window.__RD__ = {
+            peerId: @json($peerId),
+            serverKeyB64: @json($serverKeyB64),
+            wsIdUrl: @json($wsIdUrl),
+            wsRelayUrl: @json($wsRelayUrl),
+            myId: @json($myId),
+            myName: @json($myName),
+            signalToken: @json($signalToken ?? ''),
+            webrtc: @json($webrtc ?? null),
+            addressBook: @json($addressBook ?? null),
+            version: @json(config('cortendesk.api_version')),
+            messages: @json($messages),
+            workerUrl: '/rdclient/session.worker.js?v={{ $rdVer }}'
+        };
+        // No ?id= given: app.js shows the connect overlay asking for peer id + password.
+    </script>
+    <script type="module" src="/rdclient/app.js?v={{ $rdVer }}" data-rd-worker="/rdclient/session.worker.js?v={{ $rdVer }}"></script>
+
+</body>
+</html>

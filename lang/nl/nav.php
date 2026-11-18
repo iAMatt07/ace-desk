@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'about_copyright' => '©:year CortenDesk door :author',
+    'about_cortendesk' => 'Over CortenDesk',
+    'about_license' => 'AGPL-3.0-licentie',
+    'about_new_version' => 'Er is een nieuwe versie beschikbaar: v:version',
+    'about_release_notes_for' => 'Release notes voor v:version',
+    'about_released' => 'Uitgebracht op :date',
+    'about_version' => 'Versie :version',
+    'auth_footer' => '©:year CortenDesk. Een opensource-console, compatibel met RustDesk Pro',
+    'close_menu' => 'Menu sluiten',
+    'cortendesk_compares_running_version_agai' => 'CortenDesk vergelijkt de draaiende versie met de nieuwste gepubliceerde release.',
+    'diagnostics' => 'Diagnose',
+    'file_transfers' => 'Bestandsoverdrachten',
+    'full_screen' => 'Volledig scherm',
+    'logins' => 'Logins',
+    'logout' => 'Uitloggen',
+    'monitor' => 'Monitoring',
+    'release_check_unavailable' => 'Releasecontrole niet beschikbaar',
+    'sponsor_cortendesk' => 'CortenDesk sponsoren',
+    'sponsor_cortendesk_title' => 'Steun CortenDesk (opent in een nieuw tabblad)',
+    'theme_mode' => 'Thema',
+    'toggle_menu' => 'Menu tonen/verbergen',
+    'up_to_date' => 'Up-to-date',
+    'update_to_v_version' => 'Update naar v:version',
+    'version_version_is_available_opens' => 'Versie :version is beschikbaar. Opent de release notes.',
+];

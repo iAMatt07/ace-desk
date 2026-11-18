@@ -1,0 +1,214 @@
+<?php
+
+return [
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reported API version
+    |--------------------------------------------------------------------------
+    | Returned by GET /api/version. Clients may use this for capability hints.
+    */
+    // Single source of truth is the VERSION file at the repo root (also used
+    // by release tags and the Docker image); env can still override.
+    'api_version' => env('CORTENDESK_API_VERSION', trim((string) @file_get_contents(base_path('VERSION'))) ?: '0.0.0'),
+
+    // Release date of that version (YYYY-MM-DD), written alongside VERSION at
+    // release time. Shown in the About dialog; null hides the line.
+    'released_at' => trim((string) @file_get_contents(base_path('RELEASED'))) ?: null,
+
+    /*
+    |--------------------------------------------------------------------------
+    | RustDesk infrastructure this console fronts
+    |--------------------------------------------------------------------------
+    | The hbbs (ID/rendezvous) and hbbr (relay) servers, and the server's
+    | public key (contents of id_ed25519.pub). Used for web-client bootstrap
+    | and shown on the Settings screen.
+    */
+    'id_server' => env('CORTENDESK_ID_SERVER', ''),
+    'relay_server' => env('CORTENDESK_RELAY_SERVER', ''),
+    // hbbs and hbbr run in this container (the Docker image's default).
+    // Diagnostics then checks them over loopback: their public address often
+    // does not loop back from inside the container (#114).
+    'embedded_server' => filter_var(env('CORTENDESK_EMBEDDED_SERVER', false), FILTER_VALIDATE_BOOL),
+    // Trimmed: id_ed25519.pub is written without a trailing newline, so a key
+    // that arrives with surrounding whitespace picked it up in transit (an
+    // editor, a copy-paste, a heredoc in a compose file). The comparison is
+    // exact, and the resulting failure is indistinguishable from a genuinely
+    // wrong key — clients simply refuse to connect.
+    'public_key' => trim((string) env('CORTENDESK_PUBLIC_KEY', '')),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Server link
+    |--------------------------------------------------------------------------
+    | Shared secret between this console and CortenDesk Server (hbbs 1.1.0+).
+    | hbbs uses it to fetch the device policy and report LAN addresses; the
+    | console uses it to sign web client tickets. Empty turns the link off.
+    | The Docker image generates one into /data on first boot.
+    | See docs/server-link.md.
+    */
+    'server_secret' => trim((string) env('CORTENDESK_SERVER_SECRET', '')),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Web client
+    |--------------------------------------------------------------------------
+    | Absolute URL of the static V1 web client (served by nginx, not this
+    | app). Must be plain http — browsers block ws:// connections to
+    | hbbs/hbbr from an https page. Empty hides the sidebar link.
+    */
+    'webclient_url' => env('CORTENDESK_WEBCLIENT_URL', ''),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Native web client (V2)
+    |--------------------------------------------------------------------------
+    | The in-browser client served by this app at /webclient (assets in
+    | public/rdclient). WebSocket endpoints for hbbs/hbbr behind the nginx
+    | TLS proxy; when empty they are derived from id_server as
+    | wss://<host>/ws/id and wss://<host>/ws/relay. The flag gates the
+    | "Connect" links in the device list.
+    */
+    'native_webclient' => env('CORTENDESK_NATIVE_WEBCLIENT', true),
+    'ws_id_url' => env('CORTENDESK_WS_ID_URL', ''),
+    'ws_relay_url' => env('CORTENDESK_WS_RELAY_URL', ''),
+
+    // Share links (docs/share-links.md).
+    'share_links' => (bool) env('CORTENDESK_SHARE_LINKS', true),
+
+    /*
+    | Let the native web client sign in with a password kept in an address
+    | book the user can read (shared-book passwords, own personal-book
+    | hashes), as the desktop client does. The browser gets only the salted
+    | hash for the device it is connecting to; each use is audit-logged.
+    | Set false to always ask for the password.
+    */
+    'webclient_address_book_passwords' => env('CORTENDESK_WEBCLIENT_AB_PASSWORDS', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Audit log stream
+    |--------------------------------------------------------------------------
+    | Also write every audit record (console actions, sign-ins, sessions, file
+    | transfers, alarms, admin-API token use) as one JSON line to the log
+    | channel `cortendesk_audit` (stderr, or CORTENDESK_AUDIT_LOG_STREAM), for
+    | a log shipper. See docs/audit-log-stream.md.
+    */
+    'audit_log' => (bool) env('CORTENDESK_AUDIT_LOG', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Presence
+    |--------------------------------------------------------------------------
+    | Seconds without a heartbeat before a device counts as offline.
+    | Stock clients heartbeat roughly every 15 seconds.
+    */
+    'online_window' => env('CORTENDESK_ONLINE_WINDOW', 60),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Log retention
+    |--------------------------------------------------------------------------
+    | Days to keep audit/log rows (connections, file transfers, logins,
+    | alarms). 0 = keep forever. Overridable per-install in Settings; pruned
+    | nightly by cortendesk:prune-logs.
+    */
+    'log_retention_days' => env('CORTENDESK_LOG_RETENTION_DAYS', 365),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Apprise notifications
+    |--------------------------------------------------------------------------
+    | HTTP timeout in seconds for notifications the scheduler sends (device
+    | offline/recovery and retries). Sends made while handling a request
+    | always use 3 seconds. Clamped to 1-60.
+    */
+    'notifications' => [
+        'scheduled_timeout' => (int) env('CORTENDESK_NOTIFY_TIMEOUT', 15),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Build Installers
+    |--------------------------------------------------------------------------
+    | URL the sidebar "Build Installers" entry opens (an rdgen instance).
+    | Overridable per-install in Settings; empty hides the menu entry.
+    */
+    'rdgen_url' => env('CORTENDESK_RDGEN_URL', 'https://rdgen.crayoneater.org'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Client URL scheme
+    |--------------------------------------------------------------------------
+    | Scheme of the "open in RustDesk" links. A client built with rdgen under
+    | another app name registers that name, lowercased, instead of "rustdesk".
+    | Overridable per-install in Settings.
+    */
+    'client_url_scheme' => env('CORTENDESK_CLIENT_URL_SCHEME', 'rustdesk'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Client Downloads
+    |--------------------------------------------------------------------------
+    | Installers uploaded under System -> Client Downloads and offered on the
+    | public /downloads page.
+    |
+    | downloads_max_kb is the largest installer the console accepts. Set it
+    | with CORTENDESK_DOWNLOADS_MAX_MB (default 512); the older
+    | CORTENDESK_DOWNLOADS_MAX_KB still works when the MB one is unset.
+    |
+    | Every layer an upload passes through must allow it. The Docker image
+    | derives nginx client_max_body_size and PHP upload_max_filesize /
+    | post_max_size from the same variable at boot (docker/entrypoint.sh). A
+    | manual install has to raise those three by hand (README, "Manual
+    | installation"); past them the request dies before Laravel sees it and
+    | the operator gets a broken page instead of a validation error.
+    |
+    | downloads_on_login controls only the icon row under the sign-in form; the
+    | /downloads page itself is always reachable (unpublish the builds to empty
+    | it).
+    */
+    'downloads_max_kb' => is_numeric(env('CORTENDESK_DOWNLOADS_MAX_MB'))
+        ? (int) env('CORTENDESK_DOWNLOADS_MAX_MB') * 1024
+        : (int) env('CORTENDESK_DOWNLOADS_MAX_KB', 512 * 1024),
+    // Internal nginx location that serves CORTENDESK_DOWNLOADS_PATH (the Docker
+    // image sets it). Empty: files stream through PHP.
+    'downloads_accel' => env('CORTENDESK_DOWNLOADS_ACCEL', ''),
+    'downloads_on_login' => filter_var(env('CORTENDESK_DOWNLOADS_ON_LOGIN', true), FILTER_VALIDATE_BOOL),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Backups
+    |--------------------------------------------------------------------------
+    | Where Settings -> Backups writes its archives (one .tar per backup, the
+    | database, settings and server files inside). The Docker image points it
+    | into the /data volume. rustdesk_dir is the embedded ID server's data
+    | directory (key pair and peer database); empty when the server runs
+    | elsewhere, in which case backups carry the database only.
+    */
+    'backups_path' => env('CORTENDESK_BACKUPS_PATH', storage_path('app/private/backups')),
+    'rustdesk_dir' => rtrim((string) env('CORTENDESK_RUSTDESK_DIR', ''), '/'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | OIDC break-glass switch
+    |--------------------------------------------------------------------------
+    | Set CORTENDESK_OIDC_DISABLED=true to turn single sign-on off from the
+    | shell, without database access. Everything else about SSO is configured
+    | in Settings → SSO; this exists purely so a misconfigured provider can
+    | never permanently lock an operator out of their own console. Turning SSO
+    | off also re-enables password sign-in, whatever the stored settings say.
+    */
+    'oidc_disabled' => filter_var(env('CORTENDESK_OIDC_DISABLED', false), FILTER_VALIDATE_BOOL),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Update check
+    |--------------------------------------------------------------------------
+    | The console reads the VERSION file from GitHub every ~6 hours to show an
+    | "update available" badge. CORTENDESK_UPDATE_CHECK=false stops the request
+    | and hides the badge and the release status line, for installs that must
+    | not call out or that get their updates from a packager.
+    */
+    'update_check' => filter_var(env('CORTENDESK_UPDATE_CHECK', true), FILTER_VALIDATE_BOOL),
+];
