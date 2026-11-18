@@ -16,8 +16,6 @@ for p in 80 443 21115 21116 21117; do
   sudo iptables -C INPUT -p tcp --dport $p -j ACCEPT 2>/dev/null || sudo iptables -I INPUT -p tcp --dport $p -j ACCEPT
 done
 sudo iptables -C INPUT -p udp --dport 21116 -j ACCEPT 2>/dev/null || sudo iptables -I INPUT -p udp --dport 21116 -j ACCEPT
-sudo apt-get install -y iptables-persistent >/dev/null 2>&1 || true
-sudo netfilter-persistent save || true
 
 echo "==> 3/5 Criando a configuração"
 if [ ! -f .env ]; then
