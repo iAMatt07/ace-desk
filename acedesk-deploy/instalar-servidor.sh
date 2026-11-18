@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ACE Desk — instala tudo numa VM Ubuntu da Oracle Cloud.
+# ACE Desk — instala tudo numa VM Ubuntu (Google Cloud ou Oracle).
 # Uso (dentro da VM):  bash instalar-servidor.sh desk.aaccessbr.com
 set -euo pipefail
 DOMINIO="${1:?Informe o domínio. Ex: bash instalar-servidor.sh desk.aaccessbr.com}"
@@ -13,9 +13,9 @@ fi
 
 echo "==> 2/5 Liberando as portas no firewall da VM"
 for p in 80 443 21115 21116 21117; do
-  sudo iptables -C INPUT -p tcp --dport $p -j ACCEPT 2>/dev/null || sudo iptables -I INPUT 5 -p tcp --dport $p -j ACCEPT
+  sudo iptables -C INPUT -p tcp --dport $p -j ACCEPT 2>/dev/null || sudo iptables -I INPUT -p tcp --dport $p -j ACCEPT
 done
-sudo iptables -C INPUT -p udp --dport 21116 -j ACCEPT 2>/dev/null || sudo iptables -I INPUT 5 -p udp --dport 21116 -j ACCEPT
+sudo iptables -C INPUT -p udp --dport 21116 -j ACCEPT 2>/dev/null || sudo iptables -I INPUT -p udp --dport 21116 -j ACCEPT
 sudo apt-get install -y iptables-persistent >/dev/null 2>&1 || true
 sudo netfilter-persistent save || true
 

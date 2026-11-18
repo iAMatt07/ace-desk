@@ -73,7 +73,7 @@ ssh -i "$HOME\Downloads\ssh-key-2026-11-18.key" ubuntu@SEU_IP
 3. Já dentro do servidor (o texto começa com `ubuntu@ace-desk`), cole:
 
 ```bash
-git clone https://github.com/SEU_USUARIO_GITHUB/ace-desk.git
+git clone https://github.com/iAMatt07/ace-desk.git
 cd ace-desk/acedesk-deploy
 bash instalar-servidor.sh desk.aaccessbr.com
 ```
