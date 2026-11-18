@@ -46,6 +46,9 @@ import { CompactKeyboard } from './compact-keyboard';
 import { MobileBar, barSide, fullscreenButtonMode, currentOrientation, swappedPrefs, type Orientation } from './mobile-bar';
 import { TrackpadMapper } from '../input/touch-trackpad';
 import type { TouchOutput } from '../input/touch-direct';
+
+/** Pinch sensitivity: the zoom factor per gesture step is raised to this power. */
+const PINCH_GAIN = 1.5;
 import type { Pt } from '../input/gesture';
 import { keyComboCommands, modControlKeys, stickyTextCommands } from '../input/extra-keys';
 import { readLocalClipboardText } from '../input/clipboard-cursor';
@@ -2905,7 +2908,9 @@ export class RdApp {
   private zoomView(scale: number, center: Pt, pan: Pt): void {
     this.lastUserPanAt = Date.now();
     const vp = this.el.viewport.getBoundingClientRect();
-    this.view.zoomAt(scale, center.x - vp.left, center.y - vp.top);
+    // ACE Desk: a more responsive pinch (the same finger travel zooms ~1.5x more).
+    const boosted = scale === 1 ? 1 : scale ** PINCH_GAIN;
+    this.view.zoomAt(boosted, center.x - vp.left, center.y - vp.top);
     this.view.panBy(pan.x, pan.y);
     this.applyView();
   }
@@ -2995,6 +3000,7 @@ export class RdApp {
         haptic: () => haptic(),
         keyboard: () => this.toggleSoftKeyboard(),
         zoom: (scale, center, pan) => this.zoomView(scale, center, pan),
+        zoomed: () => this.view.zoomed,
         mapper: (out) => (this.inputMode === 'trackpad' ? this.trackpadFor(out) : null),
       },
     };

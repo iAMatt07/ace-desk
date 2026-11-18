@@ -53,9 +53,44 @@ describe('GestureRecognizer', () => {
     expect(ev).toEqual([]);
     vi.advanceTimersByTime(1);
     expect(ev).toEqual([{ g: 'longPress', at: { x: 50, y: 60 } }]);
-    g.move(1, 200, 200, 700); // no drag after a long press
-    g.up(1, 200, 200, 900);
-    expect(ev).toHaveLength(1);
+    g.up(1, 50, 60, 900); // lifted without moving
+    expect(ev).toEqual([{ g: 'longPress', at: { x: 50, y: 60 } }, { g: 'pressEnd', at: { x: 50, y: 60 } }]);
+  });
+
+  it('moving after a long press is a held drag (press-and-drag)', () => {
+    const { g, ev } = rig();
+    g.down(1, 50, 60, 0);
+    vi.advanceTimersByTime(500);
+    g.move(1, 200, 60, 700);
+    g.move(1, 220, 60, 720);
+    g.up(1, 220, 60, 900);
+    expect(ev.map((e) => e.g)).toEqual(['longPress', 'dragStart', 'dragMove', 'dragEnd']);
+    expect(ev[1]).toMatchObject({ from: { x: 50, y: 60 }, held: true });
+  });
+
+  it('a pinch is caught even when the fingers also drift diagonally', () => {
+    const { g, ev } = rig();
+    g.down(1, 100, 100, 0);
+    g.down(2, 200, 200, 10);
+    // Both fingers drift down-right while spreading a bit (spread +~17px).
+    g.move(1, 112, 112, 20);
+    g.move(2, 224, 224, 20);
+    g.move(1, 120, 120, 30);
+    g.move(2, 240, 240, 30);
+    expect(ev.some((e) => e.g === 'pinch')).toBe(true);
+  });
+
+  it('a scroll that turns into a pinch switches to zoom', () => {
+    const { g, ev } = rig();
+    g.down(1, 100, 100, 0);
+    g.down(2, 200, 100, 10);
+    g.move(1, 100, 140, 20);
+    g.move(2, 200, 140, 20); // pure scroll down 40
+    expect(ev.some((e) => e.g === 'scroll')).toBe(true);
+    g.move(1, 70, 140, 30);
+    g.move(2, 230, 140, 30); // now spreading 60px
+    g.move(2, 260, 140, 40);
+    expect(ev.some((e) => e.g === 'pinch')).toBe(true);
   });
 
   it('drag: start from the touch point, moves, end', () => {
@@ -196,29 +231,53 @@ describe('DirectTouchMapper', () => {
     expect(calls).toEqual(['move@5,6', 'down:1@5,6', 'up:1@5,6']);
   });
 
-  it('long press and two-finger tap right-click', () => {
+  it('long press then lift = right click; two-finger tap = right click', () => {
     const { o, calls } = out();
     const m = new DirectTouchMapper(o);
     m.handle({ g: 'longPress', at: { x: 1, y: 2 } });
+    m.handle({ g: 'pressEnd', at: { x: 1, y: 2 } });
     m.handle({ g: 'tap', fingers: 2, at: { x: 3, y: 4 }, count: 1 });
     expect(calls).toEqual(['haptic', 'move@1,2', 'down:2@1,2', 'up:2@1,2', 'move@3,4', 'down:2@3,4', 'up:2@3,4']);
   });
 
-  it('drag presses at the touch point and releases at the end', () => {
+  it('hold then drag presses the left button at the touch point and releases at the end', () => {
     const { o, calls } = out();
     const m = new DirectTouchMapper(o);
-    m.handle({ g: 'dragStart', from: { x: 0, y: 0 }, at: { x: 20, y: 0 }, afterTap: false });
+    m.handle({ g: 'longPress', at: { x: 0, y: 0 } });
+    m.handle({ g: 'dragStart', from: { x: 0, y: 0 }, at: { x: 20, y: 0 }, afterTap: false, held: true });
     m.handle({ g: 'dragMove', at: { x: 40, y: 0 }, delta: { x: 20, y: 0 } });
     m.handle({ g: 'dragEnd', at: { x: 40, y: 0 }, cancelled: false });
-    expect(calls).toEqual(['move@0,0', 'down:1@0,0', 'move@20,0', 'move@40,0', 'move@40,0', 'up:1@40,0']);
+    expect(calls).toEqual(['haptic', 'move@0,0', 'down:1@0,0', 'move@20,0', 'move@40,0', 'move@40,0', 'up:1@40,0']);
   });
 
-  it('a cancelled drag still releases the button', () => {
+  it('a cancelled held drag still releases the button', () => {
     const { o, calls } = out();
     const m = new DirectTouchMapper(o);
-    m.handle({ g: 'dragStart', from: { x: 0, y: 0 }, at: { x: 20, y: 0 }, afterTap: false });
+    m.handle({ g: 'dragStart', from: { x: 0, y: 0 }, at: { x: 20, y: 0 }, afterTap: false, held: true });
     m.handle({ g: 'dragEnd', at: { x: 20, y: 0 }, cancelled: true });
     expect(calls.at(-1)).toBe('up:1@20,0');
+  });
+
+  it('one-finger drag scrolls the page when not zoomed (no button pressed)', () => {
+    const { o, calls } = out();
+    const m = new DirectTouchMapper(o);
+    m.handle({ g: 'dragStart', from: { x: 0, y: 0 }, at: { x: 0, y: 30 }, afterTap: false });
+    m.handle({ g: 'dragMove', at: { x: 0, y: 90 }, delta: { x: 0, y: 60 } });
+    m.handle({ g: 'dragEnd', at: { x: 0, y: 90 }, cancelled: false });
+    expect(calls).toEqual(['wheel 0,2']);
+  });
+
+  it('one-finger drag pans the view when zoomed in', () => {
+    const { o, calls } = out();
+    const pans: string[] = [];
+    o.zoomed = () => true;
+    o.zoom = (s, _c, p) => pans.push(`${s} ${p.x},${p.y}`);
+    const m = new DirectTouchMapper(o);
+    m.handle({ g: 'dragStart', from: { x: 0, y: 0 }, at: { x: 15, y: 5 }, afterTap: false });
+    m.handle({ g: 'dragMove', at: { x: 25, y: 5 }, delta: { x: 10, y: 0 } });
+    m.handle({ g: 'dragEnd', at: { x: 25, y: 5 }, cancelled: false });
+    expect(pans).toEqual(['1 15,5', '1 10,0']);
+    expect(calls).toEqual([]);
   });
 
   it('three-finger tap opens the keyboard; pinch zooms', () => {

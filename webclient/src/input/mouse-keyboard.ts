@@ -382,6 +382,8 @@ export type InputOptions = {
     keyboard?(): void;
     /** Pinch: local zoom by `scale` about `center`, then pan. */
     zoom?(scale: number, center: Pt, pan: Pt): void;
+    /** Is the local view zoomed in? */
+    zoomed?(): boolean;
     /** A mapper other than direct touch (Trackpad mode), or null for direct. */
     mapper?(out: TouchOutput): GestureMapper | null;
   };
@@ -463,6 +465,7 @@ export function attachInput(
     haptic: () => options.touch?.haptic?.(),
     keyboard: () => options.touch?.keyboard?.(),
     zoom: (scale, center, pan) => options.touch?.zoom?.(scale, center, pan),
+    zoomed: () => options.touch?.zoomed?.() ?? false,
   };
   const direct = new DirectTouchMapper(touchOut);
   const gestures = new GestureRecognizer((g) => {

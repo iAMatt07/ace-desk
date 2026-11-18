@@ -11,6 +11,8 @@ export type TouchOutput = {
   keyboard(): void;
   /** Local zoom: multiply by scale about center, then pan. */
   zoom(scale: number, center: Pt, pan: Pt): void;
+  /** Is the local view zoomed in? (one-finger drag pans then, scrolls otherwise) */
+  zoomed?(): boolean;
 };
 
 /** Turns gesture intents into input; one per touch mode. */
@@ -48,15 +50,18 @@ export class ScrollAccumulator {
 }
 
 /**
- * Touch (direct) mode: the finger is the mouse, where it touches.
- * tap = click there (the host cursor is moved first: it only moves on MOVE),
- * double tap = double click at the first tap's point, long press or
- * two-finger tap = right click, one-finger drag = left drag, two-finger drag
- * = scroll, pinch = local zoom, three-finger tap = keyboard.
+ * Touch (direct) mode ("Clicar"): the finger is the mouse, where it touches.
+ * tap = click there, double tap = double click, two-finger tap = right click,
+ * three-finger tap = keyboard, pinch = local zoom.
+ * One-finger drag: pans the view when zoomed in, scrolls the page otherwise
+ * (like a phone). Hold still for a moment then drag = left-button drag
+ * (select text, move windows); hold and lift without moving = right click.
+ * Two-finger drag = scroll.
  */
 export class DirectTouchMapper {
   private readonly scroll = new ScrollAccumulator();
-  private dragging = false;
+  /** What the current one-finger drag does. */
+  private drag: 'none' | 'button' | 'pan' | 'scroll' = 'none';
 
   constructor(private readonly out: TouchOutput) {}
 
@@ -71,23 +76,34 @@ export class DirectTouchMapper {
         this.click(e.fingers === 2 ? RIGHT : LEFT, e.at);
         return;
       case 'longPress':
+        // Wait: lifting now is a right click, moving is a button drag.
         o.haptic();
+        return;
+      case 'pressEnd':
         this.click(RIGHT, e.at);
         return;
       case 'dragStart':
-        o.mouse('move', 0, e.from);
-        o.mouse('down', LEFT, e.from);
-        o.mouse('move', 0, e.at);
-        this.dragging = true;
+        if (e.held) {
+          o.mouse('move', 0, e.from);
+          o.mouse('down', LEFT, e.from);
+          o.mouse('move', 0, e.at);
+          this.drag = 'button';
+          return;
+        }
+        this.drag = o.zoomed?.() ? 'pan' : 'scroll';
+        this.scroll.reset();
+        this.moveBy(e.at.x - e.from.x, e.at.y - e.from.y, e.at);
         return;
       case 'dragMove':
-        if (this.dragging) o.mouse('move', 0, e.at);
+        if (this.drag === 'button') o.mouse('move', 0, e.at);
+        else this.moveBy(e.delta.x, e.delta.y, e.at);
         return;
       case 'dragEnd':
-        if (!this.dragging) return;
-        this.dragging = false;
-        if (!e.cancelled) o.mouse('move', 0, e.at);
-        o.mouse('up', LEFT, e.at);
+        if (this.drag === 'button') {
+          if (!e.cancelled) o.mouse('move', 0, e.at);
+          o.mouse('up', LEFT, e.at);
+        }
+        this.drag = 'none';
         return;
       case 'scroll': {
         const s = this.scroll.add(e.dx, e.dy);
@@ -102,6 +118,17 @@ export class DirectTouchMapper {
         return;
       case 'down':
         return;
+    }
+  }
+
+  private moveBy(dx: number, dy: number, at: Pt): void {
+    if (this.drag === 'pan') {
+      this.out.zoom(1, at, { x: dx, y: dy });
+      return;
+    }
+    if (this.drag === 'scroll') {
+      const s = this.scroll.add(dx, dy);
+      if (s.x || s.y) this.out.wheel(s.x, s.y);
     }
   }
 

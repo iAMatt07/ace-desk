@@ -111,6 +111,8 @@ export class TrackpadMapper implements GestureMapper {
         this.click(RIGHT);
         return;
       case 'dragStart':
+        // A drag after a long press already right-clicked: ignore it.
+        if (e.held) return;
         this.dragging = true;
         if (this.tapWaiting && e.afterTap) {
           // Tap, then drag: hold the left button for the drag (no click).
@@ -148,6 +150,8 @@ export class TrackpadMapper implements GestureMapper {
         return;
       case 'idle':
         this.scroll.reset();
+        return;
+      case 'pressEnd':
         return;
     }
   }

@@ -21,8 +21,10 @@ export type GestureEvent =
   /** `at`: where to click. A double tap reports the FIRST tap's point (count 2). */
   | { g: 'tap'; fingers: 1 | 2 | 3; at: Pt; count: 1 | 2 }
   | { g: 'longPress'; at: Pt }
-  /** One finger left the slop circle. afterTap: it came down right after a tap (tap-and-drag). */
-  | { g: 'dragStart'; from: Pt; at: Pt; afterTap: boolean }
+  /** One finger left the slop circle. afterTap: it came down right after a tap (tap-and-drag). held: it moved after a long press (press-and-drag). */
+  | { g: 'dragStart'; from: Pt; at: Pt; afterTap: boolean; held?: boolean }
+  /** A long press ended without moving (held: true drags report dragStart instead). */
+  | { g: 'pressEnd'; at: Pt }
   | { g: 'dragMove'; at: Pt; delta: Pt }
   | { g: 'dragEnd'; at: Pt; cancelled: boolean }
   /** One-finger movement before it became a drag is not reported; this is the two-finger centroid. */
@@ -48,7 +50,7 @@ export const GESTURE_DEFAULTS: GestureOptions = {
   doubleTapMs: 300,
   doubleTapSlopPx: 40,
   multiTapMs: 350,
-  pinchPx: 24,
+  pinchPx: 14,
 };
 
 type Finger = { start: Pt; last: Pt };
@@ -56,7 +58,7 @@ type Finger = { start: Pt; last: Pt };
 type State =
   | { s: 'idle' }
   | { s: 'one'; id: number; start: Pt; last: Pt; t0: number; afterTap: boolean }
-  | { s: 'pressed'; id: number } // long press fired; wait for the finger to lift
+  | { s: 'pressed'; id: number; at: Pt } // long press fired: lift = pressEnd, move = held drag
   | { s: 'drag'; id: number; last: Pt }
   | {
       s: 'multi';
@@ -66,6 +68,8 @@ type State =
       first: Pt;
       centroid: Pt;
       dist: number;
+      /** Finger spread when the gesture became a scroll: a later pinch can still take over. */
+      base: number;
     };
 
 const dist2 = (a: Pt, b: Pt): number => (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
@@ -106,7 +110,7 @@ export class GestureRecognizer {
       this.lastTap = null;
       this.state = {
         s: 'multi', mode: 'undecided', t0: st.t0, maxFingers: this.fingers.size,
-        first: st.start, centroid: this.centroid(), dist: this.spread(),
+        first: st.start, centroid: this.centroid(), dist: this.spread(), base: this.spread(),
       };
       return;
     }
@@ -115,6 +119,7 @@ export class GestureRecognizer {
       // Re-baseline, or the new finger reads as a jump.
       st.centroid = this.centroid();
       st.dist = this.spread();
+      st.base = st.dist;
     }
     // 'drag' / 'pressed': extra fingers are ignored.
   }
@@ -136,6 +141,13 @@ export class GestureRecognizer {
           this.emit({ g: 'dragStart', from: st.start, at: p, afterTap: st.afterTap });
         }
         return;
+      case 'pressed':
+        if (id !== st.id) return;
+        if (dist2(st.at, p) > this.o.slopPx ** 2) {
+          this.state = { s: 'drag', id, last: p };
+          this.emit({ g: 'dragStart', from: st.at, at: p, afterTap: false, held: true });
+        }
+        return;
       case 'drag':
         if (id !== st.id) return;
         this.emit({ g: 'dragMove', at: p, delta: { x: p.x - prev.x, y: p.y - prev.y } });
@@ -146,7 +158,10 @@ export class GestureRecognizer {
         const c = this.centroid();
         const d = this.spread();
         if (st.mode === 'undecided') {
-          if (st.maxFingers === 2 && Math.abs(d - st.dist) > this.o.pinchPx) {
+          // A pinch wins over a scroll as soon as the spread changes a little
+          // (in any direction), even if the fingers also drift together.
+          const pinchAt = Math.min(this.o.pinchPx, Math.max(8, st.dist * 0.08));
+          if (st.maxFingers === 2 && Math.abs(d - st.dist) > pinchAt) {
             st.mode = 'pinch';
           } else if (dist2(c, st.centroid) > this.o.slopPx ** 2) {
             st.mode = st.maxFingers === 2 ? 'scroll' : 'done';
@@ -158,6 +173,14 @@ export class GestureRecognizer {
           if (st.mode === 'scroll') {
             this.emit({ g: 'scroll', dx: c.x - st.centroid.x, dy: c.y - st.centroid.y });
           }
+          st.centroid = c;
+          st.dist = d;
+          st.base = d;
+          return;
+        }
+        if (st.mode === 'scroll' && st.maxFingers === 2 && Math.abs(d - st.base) > this.o.pinchPx * 1.5) {
+          // Started as a scroll but the fingers are clearly pinching now.
+          st.mode = 'pinch';
           st.centroid = c;
           st.dist = d;
           return;
@@ -203,7 +226,9 @@ export class GestureRecognizer {
         return;
       case 'pressed':
         this.fingers.delete(id);
-        if (id === st.id) this.toIdle();
+        if (id !== st.id) return;
+        this.emit({ g: 'pressEnd', at: st.at });
+        this.toIdle();
         return;
       case 'multi':
         this.fingers.delete(id);
@@ -212,6 +237,7 @@ export class GestureRecognizer {
           if (this.fingers.size >= 2) {
             st.centroid = this.centroid();
             st.dist = this.spread();
+            st.base = st.dist;
           }
           return;
         }
@@ -253,7 +279,7 @@ export class GestureRecognizer {
     const st = this.state;
     if (st.s !== 'one') return;
     this.lastTap = null;
-    this.state = { s: 'pressed', id: st.id };
+    this.state = { s: 'pressed', id: st.id, at: st.last };
     this.emit({ g: 'longPress', at: st.last });
   }
 
