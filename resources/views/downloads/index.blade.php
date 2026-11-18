@@ -8,7 +8,7 @@
         <div class="card-header rd-auth-head py-3 text-center d-flex align-items-center justify-content-center">
             <a href="{{ url('/') }}" class="rd-auth-brand mb-0">
                 <img src="{{ \App\Support\Asset::url('assets/images/cortendesk-sm.svg') }}" alt="{{ __('common.cortendesk') }}" width="60" height="60" class="rd-auth-brand-logo">
-                <span class="rd-auth-brand-wordmark">Corten<span>Desk</span></span>
+                <span class="rd-auth-brand-wordmark">ACE <span>Desk</span></span>
             </a>
         </div>
 
