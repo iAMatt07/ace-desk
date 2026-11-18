@@ -19,7 +19,7 @@ sudo iptables -C INPUT -p udp --dport 21116 -j ACCEPT 2>/dev/null || sudo iptabl
 
 echo "==> 3/5 Criando a configuração"
 if [ ! -f .env ]; then
-  SENHA=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 16)
+  SENHA=$(openssl rand -hex 8)
   printf 'DOMINIO=%s\nADMIN_USUARIO=ace\nADMIN_SENHA=%s\n' "$DOMINIO" "$SENHA" > .env
 fi
 
