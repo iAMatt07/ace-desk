@@ -1,0 +1,28 @@
+name: Coletar instaladores
+on:
+  push:
+    branches: [fetch-artifacts]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Baixar artefatos dos builds listados
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p out
+          for id in $(cat runs.txt); do gh run download "$id" -R "$GITHUB_REPOSITORY" -D "out/$id" || true; done
+          find out -type f -exec ls -la {} \;
+      - name: Publicar na branch builds
+        run: |
+          mkdir -p /tmp/b && cd /tmp/b
+          git init -q && git checkout -q -b builds
+          find "$GITHUB_WORKSPACE/out" -type f \( -name '*.apk' -o -name '*.exe' \) -exec cp {} . \;
+          ls -la
+          git -c user.email=ci@aaccessbr.com -c user.name="ACE CI" add -A
+          git -c user.email=ci@aaccessbr.com -c user.name="ACE CI" commit -qm "instaladores"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/$GITHUB_REPOSITORY.git" builds
