@@ -53,10 +53,9 @@ export class ScrollAccumulator {
  * Touch (direct) mode ("Clicar"): the finger is the mouse, where it touches.
  * tap = click there, double tap = double click, two-finger tap = right click,
  * three-finger tap = keyboard, pinch = local zoom.
- * One-finger drag: pans the view when zoomed in, scrolls the page otherwise
- * (like a phone). Hold still for a moment then drag = left-button drag
- * (select text, move windows); hold and lift without moving = right click.
- * Two-finger drag = scroll.
+ * One-finger drag = left-button drag (select text, move windows); hold and
+ * lift without moving = right click.
+ * Two-finger drag: pans the view when zoomed in, scrolls the page otherwise.
  */
 export class DirectTouchMapper {
   private readonly scroll = new ScrollAccumulator();
@@ -83,16 +82,12 @@ export class DirectTouchMapper {
         this.click(RIGHT, e.at);
         return;
       case 'dragStart':
-        if (e.held) {
-          o.mouse('move', 0, e.from);
-          o.mouse('down', LEFT, e.from);
-          o.mouse('move', 0, e.at);
-          this.drag = 'button';
-          return;
-        }
-        this.drag = o.zoomed?.() ? 'pan' : 'scroll';
-        this.scroll.reset();
-        this.moveBy(e.at.x - e.from.x, e.at.y - e.from.y, e.at);
+        // ACE: one finger always drags with the left button (select text,
+        // move windows), like AnyDesk. Panning/scrolling is two fingers.
+        o.mouse('move', 0, e.from);
+        o.mouse('down', LEFT, e.from);
+        o.mouse('move', 0, e.at);
+        this.drag = 'button';
         return;
       case 'dragMove':
         if (this.drag === 'button') o.mouse('move', 0, e.at);
@@ -106,6 +101,11 @@ export class DirectTouchMapper {
         this.drag = 'none';
         return;
       case 'scroll': {
+        // ACE: two fingers pan the view when zoomed in, scroll the page otherwise.
+        if (o.zoomed?.()) {
+          o.zoom(1, { x: 0, y: 0 }, { x: e.dx, y: e.dy });
+          return;
+        }
         const s = this.scroll.add(e.dx, e.dy);
         if (s.x || s.y) o.wheel(s.x, s.y);
         return;

@@ -258,25 +258,27 @@ describe('DirectTouchMapper', () => {
     expect(calls.at(-1)).toBe('up:1@20,0');
   });
 
-  it('one-finger drag scrolls the page when not zoomed (no button pressed)', () => {
+  it('one-finger drag is a left-button drag (selects text)', () => {
     const { o, calls } = out();
     const m = new DirectTouchMapper(o);
     m.handle({ g: 'dragStart', from: { x: 0, y: 0 }, at: { x: 0, y: 30 }, afterTap: false });
     m.handle({ g: 'dragMove', at: { x: 0, y: 90 }, delta: { x: 0, y: 60 } });
     m.handle({ g: 'dragEnd', at: { x: 0, y: 90 }, cancelled: false });
-    expect(calls).toEqual(['wheel 0,2']);
+    expect(calls[0]).toBe('move@0,0');
+    expect(calls[1]).toBe('down:1@0,0');
+    expect(calls.at(-1)).toBe('up:1@0,90');
+    expect(calls.some((c) => c.startsWith('wheel'))).toBe(false);
   });
 
-  it('one-finger drag pans the view when zoomed in', () => {
+  it('two-finger drag pans the view when zoomed in, both directions', () => {
     const { o, calls } = out();
     const pans: string[] = [];
     o.zoomed = () => true;
     o.zoom = (s, _c, p) => pans.push(`${s} ${p.x},${p.y}`);
     const m = new DirectTouchMapper(o);
-    m.handle({ g: 'dragStart', from: { x: 0, y: 0 }, at: { x: 15, y: 5 }, afterTap: false });
-    m.handle({ g: 'dragMove', at: { x: 25, y: 5 }, delta: { x: 10, y: 0 } });
-    m.handle({ g: 'dragEnd', at: { x: 25, y: 5 }, cancelled: false });
-    expect(pans).toEqual(['1 15,5', '1 10,0']);
+    m.handle({ g: 'scroll', dx: 15, dy: 5 });
+    m.handle({ g: 'scroll', dx: -10, dy: 20 });
+    expect(pans).toEqual(['1 15,5', '1 -10,20']);
     expect(calls).toEqual([]);
   });
 

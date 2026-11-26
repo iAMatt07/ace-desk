@@ -367,7 +367,7 @@ return [
     'this_microphone_format_cannot_be' => 'Este formato de microfone não pode ser codificado como Opus.',
     'tools' => 'Ferramentas',
     'touch' => 'Toque',
-    'touch_mode_tap_drag_scroll' => 'Modo toque — tocar clica, arrastar arrasta, toque longo ou toque com dois dedos clica com o botão direito, dois dedos rolam, pinçar amplia',
+    'touch_mode_tap_drag_scroll' => 'Modo toque — tocar clica, um dedo arrasta e seleciona, toque longo ou toque com dois dedos clica com o botão direito, dois dedos rolam ou movem a tela ampliada, pinçar amplia',
     'touch_or_trackpad' => 'Toque / Trackpad — toque para alternar',
     'trackpad' => 'Trackpad',
     'trackpad_mode_move_cursor' => 'Modo trackpad — deslize para mover o cursor, tocar clica, tocar e arrastar arrasta, toque com dois dedos clica com o botão direito',
