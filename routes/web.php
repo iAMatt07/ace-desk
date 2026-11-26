@@ -109,7 +109,10 @@ Route::middleware('auth')->group(function () {
     // straight here, with nothing else on the page to distract from enrolling.
     Route::view('/account/two-factor', 'account.two-factor')->name('account.two-factor');
 
-    Route::get('/', [DashboardController::class, 'index'])->name('overview');
+    // ACE Desk: the start page is the simple "Meus computadores" grid; the
+    // admin dashboard moved to /painel.
+    Route::get('/', [\App\Http\Controllers\HomeController::class, 'index'])->name('home');
+    Route::get('/painel', [DashboardController::class, 'index'])->name('overview');
 
     // Console sections are gated per area by the delegated-role matrix (PLAN
     // D4). `console-can` returns true for is_admin and, for a user with no

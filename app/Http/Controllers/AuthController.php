@@ -206,7 +206,7 @@ class AuthController extends Controller
         Auth::login($user, $remember);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('overview'));
+        return redirect()->intended(route('home'));
     }
 
     /** The emailed-code challenge screen (PLAN D1). */
@@ -265,7 +265,7 @@ class AuthController extends Controller
         $request->session()->forget('email_verify');
         $request->session()->regenerate();
 
-        return redirect()->intended(route('overview'));
+        return redirect()->intended(route('home'));
     }
 
     /** Mint and send a fresh code, invalidating the previous one. */
@@ -425,7 +425,7 @@ class AuthController extends Controller
         $request->session()->forget('2fa');
         $request->session()->regenerate();
 
-        $redirect = redirect()->intended(route('overview'));
+        $redirect = redirect()->intended(route('home'));
         if (! empty($result['warning'])) {
             $redirect->with('twofactor_warning', $result['warning']);
         }

@@ -89,7 +89,7 @@ class OidcController extends Controller
             'successful' => true,
         ]);
 
-        return redirect()->intended(route('overview'));
+        return redirect()->intended(route('home'));
     }
 
     /** Record a failed SSO attempt so it shows up alongside password failures. */

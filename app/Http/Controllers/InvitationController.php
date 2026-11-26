@@ -114,7 +114,7 @@ class InvitationController extends Controller
             $user->username,
         );
 
-        return redirect()->route('overview');
+        return redirect()->route('home');
     }
 
     /**

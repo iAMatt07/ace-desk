@@ -2460,7 +2460,8 @@ export class RdApp {
   // placeholder instead of an empty field. A real value never leaves storage.
   private hydrateSavedPassword(peerId: string): void {
     const has = !!peerId && loadSavedHash(peerId) !== null;
-    this.el.saveCheckbox.checked = has;
+    // ACE Desk: remember the password by default (sign straight in next time).
+    this.el.saveCheckbox.checked = true;
     this.el.passwordInput.value = '';
     this.el.passwordInput.placeholder = has
       ? tl('saved_password_click_change')
