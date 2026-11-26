@@ -24,6 +24,8 @@ export type ExtraKeysDeps = {
   onLatchChange?(): void;
   /** The hide-keyboard key (shown while a keyboard is open). */
   onHideKeyboard?(): void;
+  /** ACE: app actions on the bar (switch monitor, privacy screen). */
+  onAction?(action: 'monitor' | 'privacy'): void;
 };
 
 /**
@@ -150,6 +152,10 @@ export class ExtraKeysBar {
   }
 
   private press(x: XKey): void {
+    if ('action' in x) {
+      this.deps.onAction?.(x.action);
+      return;
+    }
     if (!this.enabled) return;
     this.deps.send(xkeyCommands(x, this.latches.active(), this.deps.target()));
     this.consume();

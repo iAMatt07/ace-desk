@@ -83,7 +83,7 @@ describe('extra keys: specials', () => {
 
   it('every bar key produces commands in both modes', () => {
     for (const x of XKEY_PAGES.flatMap((p) => p.keys)) {
-      if ('mod' in x) continue;
+      if ('mod' in x || 'action' in x) continue;
       expect(xkeyCommands(x, [], 'windows').length, x.id).toBeGreaterThan(0);
       expect(xkeyCommands(x, [], null).length, x.id).toBeGreaterThan(0);
     }

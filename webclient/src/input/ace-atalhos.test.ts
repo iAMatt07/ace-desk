@@ -15,6 +15,7 @@ describe('ACE Desk — página Atalhos', () => {
       'Ctrl', 'Shift', 'Alt', 'Win',
       'Copiar', 'Colar', 'Desfazer', 'Sel. tudo', 'Salvar', 'Alt+Tab', 'Área de trab.',
       'Esc', 'Enter', 'Del', 'Ctrl+Alt+Del',
+      'Monitor', 'Bloquear PC', 'Tela preta',
     ]);
   });
 

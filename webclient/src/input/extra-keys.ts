@@ -22,7 +22,9 @@ export type PhysKey = { code: string; key: string };
 export type XKey =
   | { id: string; label: string; mod: Mod }
   | { id: string; label: string; key: PhysKey; mods?: Mod[] }
-  | { id: string; label: string; special: 'ctrlAltDel' | 'lockScreen' };
+  | { id: string; label: string; special: 'ctrlAltDel' | 'lockScreen' }
+  /** ACE: app actions (not keys) handled by the session UI. */
+  | { id: string; label: string; action: 'monitor' | 'privacy' };
 
 const k = (code: string, key = code): PhysKey => ({ code, key });
 
@@ -59,6 +61,9 @@ export const XKEY_PAGES: XKeyPage[] = [
       { id: 'a-enter', label: 'Enter', key: k('Enter') },
       { id: 'a-del', label: 'Del', key: k('Delete') },
       { id: 'a-cad', label: 'Ctrl+Alt+Del', special: 'ctrlAltDel' },
+      { id: 'a-mon', label: 'Monitor', action: 'monitor' },
+      { id: 'a-lock', label: 'Bloquear PC', special: 'lockScreen' },
+      { id: 'a-privacy', label: 'Tela preta', action: 'privacy' },
     ],
   },
   {
@@ -201,7 +206,7 @@ export function keyComboCommands(key: PhysKey, mods: readonly Mod[], target: Key
 
 /** Commands for one tap on a bar key (not a modifier) with the sticky `mods`. */
 export function xkeyCommands(x: XKey, mods: readonly Mod[], target: KeyTarget | null): UiCommand[] {
-  if ('mod' in x) return [];
+  if ('mod' in x || 'action' in x) return [];
   if ('special' in x) {
     if (x.special === 'ctrlAltDel') return [{ c: 'ctrlAltDel' }];
     return [{ c: 'key', down: false, press: true, keyKind: 'control', value: ControlKey.LockScreen, modifiers: [] }];

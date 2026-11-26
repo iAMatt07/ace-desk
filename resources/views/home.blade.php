@@ -49,6 +49,7 @@
   <div class="menu" id="menu">
     <button type="button" aria-label="Menu" onclick="document.getElementById('menu').classList.toggle('open')">⋯</button>
     <div class="menu-list">
+      <a href="{{ route('power') }}">Energia (hibernar)</a>
       <a href="{{ route('overview') }}">Painel</a>
       <a href="{{ route('devices') }}">Dispositivos</a>
       <a href="{{ route('account') }}">Minha conta</a>
@@ -67,7 +68,7 @@
         <span class="dot {{ $d['online'] ? 'on' : '' }}" title="{{ $d['online'] ? 'Online' : 'Offline' }}"></span>
         <svg viewBox="0 0 64 56" fill="none" stroke="#D6DBDF" stroke-width="4" stroke-linecap="round"><rect x="4" y="4" width="56" height="36" rx="6"/><path d="M24 52h16M32 40v12"/><circle cx="32" cy="22" r="5" fill="#ff3d14" stroke="none"/></svg>
         <span class="name">{{ $d['name'] }}</span>
-        <span class="sub">{{ trim(chunk_split($d['id'], 3, ' ')) }}</span>
+        <span class="sub">{{ ctype_digit((string) $d['id']) ? strrev(trim(chunk_split(strrev((string) $d['id']), 3, ' '))) : $d['id'] }}</span>
       </a>
     @endforeach
     <a class="tile add" href="{{ route('webclient') }}">

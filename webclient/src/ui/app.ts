@@ -2111,10 +2111,38 @@ export class RdApp {
       },
       target: () => this.keyboardTarget(),
       onHideKeyboard: () => this.hideKeyboards(),
+      onAction: (action) => this.xkeyAction(action),
     });
     this.el.root.insertBefore(this.xkeys.el, this.el.dock);
     if (coarsePointer() && loadPrefs().extraKeys) this.xkeys.show(true);
     this.syncExtraKeysButton();
+  }
+
+  /** ACE: bar buttons that are app actions, not keys. */
+  private xkeyAction(action: 'monitor' | 'privacy'): void {
+    if (action === 'monitor') {
+      const n = this.displays.length;
+      if (n < 2) {
+        this.toast('Este PC tem só 1 monitor');
+        return;
+      }
+      for (let step = 1; step < n; step++) {
+        const idx = (this.current + step) % n;
+        if (this.displays[idx]?.online !== false) {
+          this.post({ c: 'switchDisplay', index: idx });
+          this.toast(`Monitor ${idx + 1} de ${n}`);
+          return;
+        }
+      }
+      this.toast('Nenhum outro monitor disponível');
+      return;
+    }
+    if (!this.privacyModeSupported || this.privacyModeImpls.length === 0) {
+      this.toast('Tela preta não disponível neste PC');
+      return;
+    }
+    const key = this.privacyModeOn && this.activePrivacyImplKey ? this.activePrivacyImplKey : this.privacyModeImpls[0]!.key;
+    this.activateSecurityControl('privacy:' + key);
   }
 
   private toggleExtraKeys(): void {

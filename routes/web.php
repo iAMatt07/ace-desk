@@ -90,6 +90,8 @@ Route::middleware('throttle:60,1,downloads')->group(function () {
 // the page is for people without an account, and someone signed in to the
 // console must be able to open one too. The token is in the URL fragment and
 // only ever posted, so it stays out of access logs.
+Route::get('/api/ace/power/{id}', [\App\Http\Controllers\PowerController::class, 'api'])
+    ->middleware('throttle:20,1,ace-power')->name('power.api');
 Route::get('/s', [ShareController::class, 'show'])->middleware('throttle:60,1,share-page')->name('share.show');
 Route::post('/s/start', [ShareController::class, 'start'])->middleware('throttle:30,1,share-start')->name('share.start');
 Route::post('/s/ping', [ShareController::class, 'ping'])->middleware('throttle:60,1,share-ping')->name('share.ping');
@@ -113,6 +115,10 @@ Route::middleware('auth')->group(function () {
     // admin dashboard moved to /painel.
     Route::get('/', [\App\Http\Controllers\HomeController::class, 'index'])->name('home');
     Route::get('/painel', [DashboardController::class, 'index'])->name('overview');
+    // ACE Desk: hibernate rules per computer (read by the helper on the PC).
+    Route::get('/energia', [\App\Http\Controllers\PowerController::class, 'index'])->name('power');
+    Route::post('/energia/{id}', [\App\Http\Controllers\PowerController::class, 'update'])->name('power.update');
+    Route::get('/energia/{id}/instalar.bat', [\App\Http\Controllers\PowerController::class, 'installer'])->name('power.installer');
 
     // Console sections are gated per area by the delegated-role matrix (PLAN
     // D4). `console-can` returns true for is_admin and, for a user with no
