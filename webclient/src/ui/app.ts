@@ -679,7 +679,7 @@ export class RdApp {
       <div class="rd-tb-brand">
         <img src="/rdclient/logo.png" alt="" width="30" height="30">
         <span class="rd-tb-brandtext">
-          <span class="rd-tb-name">Corten<span>Desk</span></span>
+          <span class="rd-tb-name">ACE <span>Desk</span></span>
           <span class="rd-tb-sub">${htl('rustdesk_remote_console')}</span>
         </span>
       </div>

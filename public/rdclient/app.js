@@ -125,7 +125,7 @@ ${j("terminal_extra_sessions",e.persistentSessions.length)}
     <div class="rd-card">
       <div class="rd-brand">
         <img class="rd-logo" src="/rdclient/logo.png" alt="ACE Desk" width="60" height="60">
-        <span class="rd-wordmark">Corten<span>Desk</span></span>
+        <span class="rd-wordmark">ACE <span>Desk</span></span>
       </div>
       <div class="rd-tagline">${e.tagline}</div>
       <div class="rd-divider" aria-hidden="true"></div>
@@ -190,7 +190,7 @@ ${j("terminal_extra_sessions",e.persistentSessions.length)}
       <div class="rd-tb-brand">
         <img src="/rdclient/logo.png" alt="" width="30" height="30">
         <span class="rd-tb-brandtext">
-          <span class="rd-tb-name">Corten<span>Desk</span></span>
+          <span class="rd-tb-name">ACE <span>Desk</span></span>
           <span class="rd-tb-sub">${l("rustdesk_remote_console")}</span>
         </span>
       </div>

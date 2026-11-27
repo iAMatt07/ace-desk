@@ -49,7 +49,7 @@ export function renderConnectCard(overlay: HTMLElement, opts: ConnectCardOptions
     <div class="rd-card">
       <div class="rd-brand">
         <img class="rd-logo" src="/rdclient/logo.png" alt="ACE Desk" width="60" height="60">
-        <span class="rd-wordmark">Corten<span>Desk</span></span>
+        <span class="rd-wordmark">ACE <span>Desk</span></span>
       </div>
       <div class="rd-tagline">${opts.tagline}</div>
       <div class="rd-divider" aria-hidden="true"></div>
