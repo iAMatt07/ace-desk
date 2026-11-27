@@ -58,7 +58,28 @@ export function decodeClipboardText(c: Clipboard): string | null {
   return new TextDecoder().decode(bytes);
 }
 
+/** ACE Desk Android app: native clipboard bridge (WebView blocks navigator.clipboard). */
+type AceAndroidBridge = { readClipboard?: () => string; writeClipboard?: (t: string) => void };
+export function aceAndroid(): AceAndroidBridge | null {
+  const w = typeof window !== 'undefined' ? (window as unknown as { AceAndroid?: AceAndroidBridge }) : null;
+  return w?.AceAndroid ?? null;
+}
+
+/** Write text to the local clipboard (native bridge first). Resolves false on failure. */
+export async function writeLocalClipboardText(text: string): Promise<boolean> {
+  const a = aceAndroid();
+  if (a?.writeClipboard) {
+    try { a.writeClipboard(text); return true; } catch { /* fall through */ }
+  }
+  if (typeof navigator === 'undefined' || typeof navigator.clipboard?.writeText !== 'function') return false;
+  try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
+}
+
 export async function readLocalClipboardText(): Promise<string | null> {
+  const a = aceAndroid();
+  if (a?.readClipboard) {
+    try { return a.readClipboard() ?? ''; } catch { /* fall through */ }
+  }
   if (typeof navigator === 'undefined' || typeof navigator.clipboard?.readText !== 'function') return null;
   try {
     return await navigator.clipboard.readText();

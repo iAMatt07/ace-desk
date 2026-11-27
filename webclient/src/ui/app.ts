@@ -51,7 +51,7 @@ import type { TouchOutput } from '../input/touch-direct';
 const PINCH_GAIN = 1.5;
 import type { Pt } from '../input/gesture';
 import { keyComboCommands, modControlKeys, stickyTextCommands } from '../input/extra-keys';
-import { readLocalClipboardText } from '../input/clipboard-cursor';
+import { readLocalClipboardText, writeLocalClipboardText } from '../input/clipboard-cursor';
 import {
   BackNotification_BlockInputState,
   BackNotification_PrivacyModeState,
@@ -3156,13 +3156,11 @@ export class RdApp {
         const sessionEpoch = this.sessionEpoch;
         // A successful sync is silent, like the native client; only the
         // fallback needs the user's attention.
-        void navigator.clipboard
-          ?.writeText(ev.text)
-          .catch(() => {
-            if (sessionEpoch === this.sessionEpoch) {
-              this.toast(tl('remote_clipboard_received_press_ctrl'));
-            }
-          });
+        void writeLocalClipboardText(ev.text).then((ok) => {
+          if (!ok && sessionEpoch === this.sessionEpoch) {
+            this.toast(tl('remote_clipboard_received_press_ctrl'));
+          }
+        });
         break;
       }
       case 'chat':
