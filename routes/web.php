@@ -118,6 +118,7 @@ Route::middleware('auth')->group(function () {
     // ACE Desk: hibernate rules per computer (read by the helper on the PC).
     Route::get('/energia', [\App\Http\Controllers\PowerController::class, 'index'])->name('power');
     Route::post('/energia/{id}', [\App\Http\Controllers\PowerController::class, 'update'])->name('power.update');
+    Route::post('/energia/{id}/hibernar', [\App\Http\Controllers\PowerController::class, 'hibernateNow'])->name('power.hibernate');
     Route::get('/energia/{id}/instalar.bat', [\App\Http\Controllers\PowerController::class, 'installer'])->name('power.installer');
 
     // Console sections are gated per area by the delegated-role matrix (PLAN

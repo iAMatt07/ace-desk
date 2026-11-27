@@ -80,6 +80,15 @@ class PowerController extends Controller
         return redirect()->route('power')->with('saved', $id);
     }
 
+    /** "Hibernar agora": queued for the helper, which picks it up within a minute. */
+    public function hibernateNow(Request $request, string $id): RedirectResponse
+    {
+        $this->device($request, $id);
+        Setting::put('ace_power_cmd.'.$id, json_encode(['cmd' => 'hibernate', 'at' => now()->toIso8601String()]));
+
+        return redirect()->route('power')->with('hibernating', $id);
+    }
+
     /** Installer for the helper, with this computer's ID and secret filled in. */
     public function installer(Request $request, string $id): Response
     {
@@ -112,7 +121,22 @@ class PowerController extends Controller
         }
         Setting::put('ace_power_seen.'.$id, now()->toIso8601String());
 
-        return response()->json(self::settingsFor($id) + ['server_time' => now()->toIso8601String()]);
+        // One-shot command (e.g. "Hibernar agora"), valid for 10 minutes.
+        $command = '';
+        $raw = Setting::get('ace_power_cmd.'.$id);
+        if ($raw) {
+            $c = json_decode($raw, true) ?: [];
+            Setting::put('ace_power_cmd.'.$id, '');
+            if (($c['cmd'] ?? '') === 'hibernate' && isset($c['at'])
+                && \Carbon\Carbon::parse($c['at'])->gt(now()->subMinutes(10))) {
+                $command = 'hibernate';
+            }
+        }
+
+        return response()->json(self::settingsFor($id) + [
+            'command' => $command,
+            'server_time' => now()->toIso8601String(),
+        ]);
     }
 
     private function device(Request $request, string $id): Device

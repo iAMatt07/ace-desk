@@ -54,7 +54,7 @@ function Get-Rules {
   $url = "{0}/api/ace/power/{1}?t={2}" -f $Cfg.url, $Cfg.id, $Cfg.token
   try {
     $r = Invoke-RestMethod -Uri $url -TimeoutSec 20 -UseBasicParsing
-    try { $r | ConvertTo-Json | Set-Content $CacheFile } catch {}
+    try { $r | Select-Object * -ExcludeProperty command | ConvertTo-Json | Set-Content $CacheFile } catch {}
     return $r
   } catch {
     if (Test-Path $CacheFile) { try { return Get-Content $CacheFile -Raw | ConvertFrom-Json } catch {} }
@@ -92,10 +92,10 @@ function Is-Busy {
 }
 
 # Aviso de 60 s. Devolve $true se pode hibernar, $false se alguem cancelou.
-function Show-Warning([string]$why) {
+function Show-Warning([string]$why, [int]$seconds = 60) {
   Add-Type -AssemblyName System.Windows.Forms, System.Drawing
   $script:cancelled = $false
-  $script:left = 60
+  $script:left = $seconds
   $f = New-Object System.Windows.Forms.Form
   $f.Text = 'ACE Desk'; $f.TopMost = $true; $f.StartPosition = 'CenterScreen'
   $f.FormBorderStyle = 'FixedDialog'; $f.MaximizeBox = $false; $f.MinimizeBox = $false
@@ -109,7 +109,7 @@ function Show-Warning([string]$why) {
   $btn.SetBounds(160, 128, 160, 44)
   $btn.BackColor = [System.Drawing.Color]::FromArgb(255, 61, 20); $btn.FlatStyle = 'Flat'
   $btn.Add_Click({ $script:cancelled = $true; $f.Close() })
-  $upd = { $lbl.Text = "Este PC vai HIBERNAR em $($script:left) segundos`n($why).`nTudo o que esta aberto continua aberto quando ele ligar de novo." }
+  $upd = { $lbl.Text = "Este PC vai HIBERNAR em $($script:left) segundos`n($why).`nSalve o que estiver fazendo ou clique em Cancelar." }
   & $upd
   $timer = New-Object System.Windows.Forms.Timer
   $timer.Interval = 1000
@@ -121,9 +121,11 @@ function Show-Warning([string]$why) {
   return (-not $script:cancelled)
 }
 
-function Do-Hibernate([string]$why) {
+function Do-Hibernate([string]$why, [switch]$Manual) {
   Log "aviso: $why (cpu=$($script:LastLoad.cpu)% gpu=$($script:LastLoad.gpu)%)"
-  if (-not (Show-Warning $why)) { Log 'cancelado pelo usuario'; return $false }
+  $secs = 60; if ($Manual) { $secs = 15 }
+  if (-not (Show-Warning $why $secs)) { Log 'cancelado pelo usuario'; return $false }
+  if ($Manual) { Log 'hibernando (pedido pelo app)'; & shutdown.exe /h; return $true }
   # Ultima conferencia: se comecou um render durante o aviso, nao hiberna
   $l = Get-Load
   if ($l.cpu -ge 40 -or $l.gpu -ge 40) { Log "nao hibernou: PC ocupado (cpu=$($l.cpu)% gpu=$($l.gpu)%)"; return $false }
@@ -168,6 +170,12 @@ while ($true) {
   $lastLoop = $now
 
   $r = Get-Rules
+  if ($r -and $r.command -eq 'hibernate') {
+    [void](Do-Hibernate 'pedido pelo app: Hibernar agora' -Manual)
+    $lastLoop = Get-Date
+    Start-Sleep -Seconds 60
+    continue
+  }
   if ($r) {
     Sync-WakeTask $r
     if ($r.enabled) {
@@ -181,14 +189,14 @@ while ($true) {
 
       $acted = $false
       # 1) Horario de hibernar (janela de 3 h depois do horario, para esperar render)
-      if ($r.sleep_time -and ($days -contains $dow) -and $state.lastScheduledDate -ne $today) {
+      if ($r.sleep_time -and ($days -contains $dow) -and $state.lastScheduledDate -ne ($today + '|' + $r.sleep_time)) {
         $st = [datetime]::ParseExact($r.sleep_time, 'HH:mm', $null)
         $st = $now.Date.AddHours($st.Hour).AddMinutes($st.Minute)
         if ($now -ge $st -and $now -lt $st.AddHours(3)) {
           if ($busy) {
             if (-not $script:loggedWait) { Log 'horario de hibernar: esperando o PC desocupar'; $script:loggedWait = $true }
           } else {
-            $state.lastScheduledDate = $today; Save-State $state
+            $state.lastScheduledDate = $today + '|' + $r.sleep_time; Save-State $state
             $script:loggedWait = $false
             [void](Do-Hibernate "horario marcado: $($r.sleep_time)")
             $acted = $true

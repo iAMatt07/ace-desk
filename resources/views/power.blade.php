@@ -35,6 +35,7 @@
   .days span { display:inline-flex; width:38px; height:38px; border-radius:19px; align-items:center; justify-content:center; background:var(--card2); color:var(--muted); font-size:14px; font-weight:600; }
   .days input:checked + span { background:var(--red); color:#fff; }
   button.save { display:block; width:100%; margin-top:14px; background:var(--red); color:#fff; border:0; border-radius:14px; padding:15px; font-size:17px; font-weight:600; font-family:inherit; }
+  button.hib { background:var(--card2); color:#fff; margin-top:10px; }
   .note { color:var(--muted); font-size:13px; line-height:1.45; margin:10px 4px 0; }
   .ok { background:#0f2e1a; color:#30d158; border-radius:12px; padding:12px 14px; margin-bottom:12px; font-size:15px; }
   .helper { font-size:14px; }
@@ -48,6 +49,9 @@
   <h1>Energia</h1>
 </header>
 <main>
+  @if (session('hibernating'))
+    <div class="ok">Pedido enviado. Em até 1 minuto o PC mostra um aviso de 15 segundos e hiberna.</div>
+  @endif
   @if (session('saved'))
     <div class="ok">Salvo. O PC aplica em até 1 minuto.</div>
   @endif
@@ -101,8 +105,14 @@
       </div>
       <button class="save" type="submit">Salvar</button>
     </form>
+    @if ($d['helper_seen'])
+      <form method="post" action="{{ route('power.hibernate', ['id' => $d['id']]) }}" onsubmit="return confirm('Hibernar o {{ $d['name'] }} agora? Você perde a conexão até ele ligar de novo.');">
+        @csrf
+        <button class="save hib" type="submit">Hibernar agora</button>
+      </form>
+    @endif
   @endforeach
-  <p class="note">Antes de hibernar, o PC mostra um aviso de 1 minuto com o botão Cancelar. Se estiver renderizando ou exportando, ele espera terminar. Hibernado, o PC volta com tudo aberto — no horário de ligar ou pelo desliga-e-liga da tomada.</p>
+  <p class="note">Antes de hibernar, o PC mostra um aviso de 1 minuto com o botão Cancelar. Se estiver renderizando ou exportando, ele espera terminar. Hibernado, o PC liga de novo no horário de ligar ou pelo desliga-e-liga da tomada.</p>
 </main>
 <script>
   // Mexeu em alguma regra? Liga a chave "Hibernar automaticamente" sozinho.
