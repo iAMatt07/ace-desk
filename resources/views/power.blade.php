@@ -104,5 +104,14 @@
   @endforeach
   <p class="note">Antes de hibernar, o PC mostra um aviso de 1 minuto com o botão Cancelar. Se estiver renderizando ou exportando, ele espera terminar. Hibernado, o PC volta com tudo aberto — no horário de ligar ou pelo desliga-e-liga da tomada.</p>
 </main>
+<script>
+  // Mexeu em alguma regra? Liga a chave "Hibernar automaticamente" sozinho.
+  document.querySelectorAll('form').forEach(function (f) {
+    var sw = f.querySelector('input[name=enabled]');
+    f.querySelectorAll('select, input[type=time], input[name="days[]"]').forEach(function (el) {
+      el.addEventListener('change', function () { if (sw) sw.checked = true; });
+    });
+  });
+</script>
 </body>
 </html>
