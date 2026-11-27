@@ -2,12 +2,16 @@ package com.aceaccess.desk
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
 import android.webkit.CookieManager
+import android.webkit.JavascriptInterface
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -38,6 +42,8 @@ class MainActivity : Activity() {
             userAgentString = "$userAgentString ACEDeskApp/1.0"
         }
         CookieManager.getInstance().setAcceptCookie(true)
+        // Area de transferencia nativa: o WebView bloqueia navigator.clipboard.
+        web.addJavascriptInterface(ClipboardBridge(this), "AceAndroid")
         web.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, req: WebResourceRequest): Boolean {
                 val host = req.url.host ?: return false
@@ -85,4 +91,21 @@ class MainActivity : Activity() {
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() { if (web.canGoBack()) web.goBack() else super.onBackPressed() }
+}
+
+/** Exposto ao site como window.AceAndroid (so carrega desk.aaccessbr.com). */
+class ClipboardBridge(private val ctx: Context) {
+    private val cm get() = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+
+    @JavascriptInterface
+    fun readClipboard(): String {
+        val clip = cm.primaryClip ?: return ""
+        if (clip.itemCount == 0) return ""
+        return clip.getItemAt(0).coerceToText(ctx)?.toString() ?: ""
+    }
+
+    @JavascriptInterface
+    fun writeClipboard(text: String) {
+        cm.setPrimaryClip(ClipData.newPlainText("ACE Desk", text))
+    }
 }
